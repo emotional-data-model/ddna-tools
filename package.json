@@ -1,6 +1,6 @@
 {
   "name": "deepadata-ddna-tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reference implementation for .ddna signing specification - W3C Data Integrity Proofs with Ed25519",
   "type": "module",
   "main": "./dist/lib/index.js",

@@ -2,12 +2,20 @@
 
 Reference implementation for the .ddna signing specification. Creates and verifies W3C Data Integrity Proofs using Ed25519 signatures with JSON Canonicalization Scheme (JCS).
 
-## Features
+## Pricing Tiers
 
-- **Seal** EDM artifacts into cryptographically signed `.ddna` envelopes
-- **Verify** envelope signatures using did:key verification methods
-- **Inspect** envelope contents in human-readable or JSON format
-- **Generate** Ed25519 key pairs with DID identifiers
+### Free (no API key needed)
+- `keygen()` — generate Ed25519 key pair
+- `verify()` — verify a sealed .ddna envelope
+- `inspect()` — read envelope contents
+- `redact()` — stateless mode, null sensitive fields
+- `validate()` — schema validation against EDM v0.5.1
+- `isExpired()` — check artifact TTL (24h default)
+
+### Commercial (API key required)
+- `seal()` — create tamper-evident .ddna envelope
+  - See https://deepadata.com/pricing for current rates
+  - **Get API key:** https://deepadata.com/api-keys
 
 ## Installation
 
@@ -24,102 +32,30 @@ npx deepadata-ddna-tools <command>
 ## Quick Start
 
 ```bash
-# Generate a key pair
+# Generate a key pair (free)
 ddna keygen --output mykey
-# Outputs: mykey.key, mykey.pub, and DID
 
-# Seal an EDM artifact
-ddna seal --key mykey.key --did did:key:z6Mk... example.edm.json
-# Outputs: example.ddna
+# Validate an EDM artifact (free)
+ddna validate artifact.edm.json
 
-# Verify the sealed envelope
-ddna verify example.ddna
-# Outputs: VALID - Signature verified
+# Seal an EDM artifact (requires API key)
+export DEEPADATA_API_KEY=your-api-key
+ddna seal --key mykey.key --did did:key:z6Mk... artifact.edm.json
 
-# Inspect envelope details
-ddna inspect example.ddna
-```
-
-## Commands
-
-### `ddna seal`
-
-Seal an EDM artifact into a `.ddna` envelope with a cryptographic signature.
-
-```bash
-ddna seal [options] <input>
-```
-
-**Arguments:**
-- `<input>` - Path to EDM artifact (`.edm.json` or `.json`)
-
-**Options:**
-- `-k, --key <path>` - Path to private key file (hex-encoded) **[required]**
-- `-d, --did <url>` - DID URL for verification method **[required]**
-- `-o, --output <path>` - Output path (default: `<input>.ddna`)
-- `--jurisdiction <code>` - Override jurisdiction code (e.g., AU, US)
-- `--expires <iso8601>` - Proof expiration timestamp
-
-**Example:**
-```bash
-ddna seal --key test.key --did did:key:z6MkiTBz1... artifact.edm.json
-```
-
-### `ddna verify`
-
-Verify the signature on a `.ddna` envelope.
-
-```bash
-ddna verify [options] <input>
-```
-
-**Arguments:**
-- `<input>` - Path to `.ddna` envelope
-
-**Options:**
-- `--skip-timestamp` - Skip timestamp validation
-
-**Example:**
-```bash
+# Verify the sealed envelope (free)
 ddna verify artifact.ddna
-# VALID - Signature verified
-#   Verification Method: did:key:z6MkiTBz1...
-#   Created: 2026-01-15T10:00:00.000Z
-```
 
-### `ddna inspect`
-
-Inspect a `.ddna` envelope and display its contents.
-
-```bash
-ddna inspect [options] <input>
-```
-
-**Arguments:**
-- `<input>` - Path to `.ddna` envelope
-
-**Options:**
-- `--json` - Output as JSON
-
-**Example:**
-```bash
+# Inspect envelope details (free)
 ddna inspect artifact.ddna
 
-Valid .ddna envelope (v1.1)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Signed by: did:key:z6MkiTBz1...uepAQ4HE
-Created: 2026-01-15T10:00:00.000Z
-Subject: auraid-000000001
-Schema: edm.v0.4.0
+# Redact for stateless mode (free)
+ddna redact artifact.edm.json -o redacted.json
 
-Governance:
-  Jurisdiction: AU
-  Retention: user_defined
-  Exportability: allowed
-  Consent Basis: explicit_consent
-
-Signature: VALID ✓
+# Check TTL expiry (free)
+ddna check-ttl artifact.edm.json
 ```
+
+## Free Commands
 
 ### `ddna keygen`
 
@@ -133,50 +69,166 @@ ddna keygen [options]
 - `-o, --output <prefix>` - Output file prefix (creates `<prefix>.key` and `<prefix>.pub`)
 - `--json` - Output as JSON to stdout
 
+### `ddna verify`
+
+Verify the signature on a `.ddna` envelope.
+
+```bash
+ddna verify [options] <input>
+```
+
+**Options:**
+- `--skip-timestamp` - Skip timestamp validation
+
+### `ddna inspect`
+
+Inspect a `.ddna` envelope and display its contents.
+
+```bash
+ddna inspect [options] <input>
+```
+
+**Options:**
+- `--json` - Output as JSON
+
+### `ddna validate`
+
+Validate an EDM artifact against the v0.5.1 schema.
+
+```bash
+ddna validate [options] <input>
+```
+
+**Options:**
+- `--json` - Output as JSON
+
 **Example:**
 ```bash
-ddna keygen --output mykey
-# ✓ Key pair generated
-#   Private key: mykey.key
-#   Public key:  mykey.pub
-#   DID:         did:key:z6Mkf5rGMoatrSj1f4QH...
+ddna validate artifact.edm.json
+# VALID - Schema validation passed
+#   Schema Version: 0.5.1
+```
+
+### `ddna redact`
+
+Redact sensitive fields for stateless mode. Nulls:
+- Gravity: recall_triggers, retrieval_keys, nearby_themes
+- Milky_Way: location_context, associated_people
+- Meta: owner_user_id, source_context
+
+```bash
+ddna redact [options] <input>
+```
+
+**Options:**
+- `-o, --output <path>` - Output path (default: stdout)
+- `--json` - Output with statistics
+
+### `ddna check-ttl`
+
+Check if artifact has expired based on created_at timestamp.
+
+```bash
+ddna check-ttl [options] <input>
+```
+
+**Options:**
+- `--ttl <hours>` - Custom TTL in hours (default: 24)
+- `--json` - Output as JSON
+
+**Example:**
+```bash
+ddna check-ttl artifact.edm.json
+# VALID - Artifact is within TTL
+#   Created: 2026-03-07T10:00:00.000Z
+#   Age: 2.5 hours
+#   TTL: 24 hours
+#   Remaining: 21.5 hours
+```
+
+## Commercial Commands
+
+### `ddna seal`
+
+Seal an EDM artifact into a `.ddna` envelope with a cryptographic signature.
+
+**Requires:** DeepaData API key (see https://deepadata.com/pricing)
+
+```bash
+ddna seal [options] <input>
+```
+
+**Arguments:**
+- `<input>` - Path to EDM artifact (`.edm.json` or `.json`)
+
+**Options:**
+- `-k, --key <path>` - Path to private key file (hex-encoded) **[required]**
+- `-d, --did <url>` - DID URL for verification method **[required]**
+- `-a, --api-key <key>` - DeepaData API key (or set `DEEPADATA_API_KEY` env var)
+- `-o, --output <path>` - Output path (default: `<input>.ddna`)
+- `--jurisdiction <code>` - Override jurisdiction code (e.g., AU, US)
+- `--expires <iso8601>` - Proof expiration timestamp
+
+**Example:**
+```bash
+export DEEPADATA_API_KEY=dda_live_xxxxx
+ddna seal --key mykey.key --did did:key:z6MkiTBz1... artifact.edm.json
 ```
 
 ## Library Usage
 
-The package can also be used as a library:
-
 ```typescript
 import {
-  seal,
+  // Free functions
+  keygen,
   verify,
   inspect,
-  keygen,
+  validate,
+  redact,
+  isExpired,
   hexToKey,
   keyToHex,
+  // Commercial (requires API key)
+  seal,
 } from 'deepadata-ddna-tools';
 
-// Generate keys
+// Generate keys (free)
 const keys = keygen();
 console.log('DID:', keys.did);
 
-// Seal an EDM artifact
-const edmPayload = {
-  meta: { subject_id: 'user-123', schema_version: 'edm.v0.4.0' },
-  core: { emotional_baseline: { valence: 0.5 } },
-  governance: { jurisdiction: 'AU' },
-};
+// Validate against schema (free)
+const validation = validate(edmPayload);
+if (!validation.valid) {
+  console.error('Validation errors:', validation.errors);
+}
 
-const envelope = await seal(edmPayload, keys.privateKey, keys.did);
+// Redact for stateless mode (free)
+const { artifact: redacted, fieldsRedacted } = redact(edmPayload);
+console.log(`Redacted ${fieldsRedacted} fields`);
 
-// Verify the envelope
+// Check TTL (free)
+const ttl = isExpired(edmPayload, 24);
+if (ttl.expired) {
+  console.log('Artifact expired');
+}
+
+// Seal an EDM artifact (requires API key)
+const envelope = await seal(edmPayload, keys.privateKey, keys.did, {
+  apiKey: process.env.DEEPADATA_API_KEY, // or set env var
+});
+
+// Verify the envelope (free)
 const result = await verify(envelope);
 console.log('Valid:', result.valid);
-
-// Inspect
-const output = await inspect(envelope);
-console.log(output);
 ```
+
+## EDM Conformance Levels
+
+| Level | Name | What it means | DeepaData involvement |
+|-------|------|---------------|----------------------|
+| Level 1 | Compliant | Valid EDM schema | None (open source tools) |
+| Level 2 | Sealed | Cryptographically signed .ddna | API key required |
+| Level 3 | Certified | Third-party audit + attestation | Commercial agreement |
 
 ## Specification
 
@@ -197,15 +249,13 @@ A `.ddna` envelope contains three components:
   "ddna_header": {
     "ddna_version": "1.1",
     "created_at": "2026-01-15T10:00:00Z",
-    "edm_version": "edm.v0.4.0",
+    "edm_version": "0.5.1",
     "jurisdiction": "AU",
-    "exportability": "allowed",
-    ...
+    "exportability": "allowed"
   },
   "edm_payload": {
     "meta": { ... },
-    "core": { ... },
-    ...
+    "core": { ... }
   },
   "proof": {
     "type": "DataIntegrityProof",
