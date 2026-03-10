@@ -20,7 +20,7 @@
  */
 
 // Core signing functions (seal requires API key)
-export { seal, sealSync, SealingApiKeyError, SealingApiError } from './seal.js';
+export { seal, sealSync, SealingApiKeyError, SealingApiError, SchemaValidationError } from './seal.js';
 export type { SealOptions } from './seal.js';
 
 // Verification (free)
@@ -40,6 +40,18 @@ export type { RedactionResult, TtlResult } from './stateless.js';
 // Schema validation (free)
 export { validate, isValid } from './validate.js';
 export type { ValidationResult, ValidationError } from './validate.js';
+
+// EDM profile schema validation (free)
+export {
+  validateEdmSchema,
+  detectProfile,
+  formatValidationErrors,
+} from './validate-schema.js';
+export type {
+  EdmProfile,
+  SchemaValidationResult,
+  SchemaValidationError as SchemaError,
+} from './validate-schema.js';
 
 // DID utilities
 export { publicKeyToDid, didToPublicKey, isValidDidUrl, resolveVerificationMethod } from './did.js';

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EDM TELEMETRY Domain",
+  "type": "object",
+  "properties": {
+    "entry_confidence": {
+      "description": "Confidence score for extraction accuracy",
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "extraction_model": {
+      "description": "Model identifier used for extraction",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "extraction_provider": {
+      "description": "Provider of the extraction model",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "anthropic",
+        "openai",
+        "kimi",
+        null
+      ]
+    },
+    "extraction_notes": {
+      "description": "Optional notes about extraction quality",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "alignment_delta": {
+      "description": "Deviation between encoded affective state and response coherence (-1.0 to +1.0)",
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "entry_confidence",
+    "extraction_model"
+  ]
+}

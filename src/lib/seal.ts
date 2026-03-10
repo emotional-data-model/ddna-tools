@@ -12,6 +12,7 @@
 import * as ed25519 from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
 import { isValidDidUrl } from './did.js';
+import { validateEdmSchema } from './validate-schema.js';
 import type {
   EdmPayload,
   DdnaHeader,
@@ -51,6 +52,26 @@ export class SealingApiError extends Error {
   }
 }
 
+/**
+ * Error thrown when schema validation fails
+ */
+export class SchemaValidationError extends Error {
+  public profile: string;
+  public validationErrors: Array<{ path: string; message: string; keyword: string }>;
+
+  constructor(
+    profile: string,
+    errors: Array<{ path: string; message: string; keyword: string }>
+  ) {
+    const summary = errors.slice(0, 3).map(e => `${e.path}: ${e.message}`).join('; ');
+    const more = errors.length > 3 ? ` (+${errors.length - 3} more)` : '';
+    super(`EDM schema validation failed (${profile} profile): ${summary}${more}`);
+    this.name = 'SchemaValidationError';
+    this.profile = profile;
+    this.validationErrors = errors;
+  }
+}
+
 // Configure ed25519 to use sha512
 ed25519.etc.sha512Sync = (...msgs) => {
   const h = sha512.create();
@@ -59,10 +80,14 @@ ed25519.etc.sha512Sync = (...msgs) => {
 };
 
 /**
- * Validate EDM payload structure
+ * Validate EDM payload against profile schema
+ *
+ * Reads meta.profile to determine which schema to use (essential, extended, full).
+ * Validates against bundled EDM v0.6.0 JSON Schema files.
  *
  * @param payload - EDM payload to validate
- * @throws Error if payload is invalid
+ * @throws SchemaValidationError if validation fails
+ * @throws Error if payload structure is invalid or profile is missing
  */
 function validateEdmPayload(payload: unknown): asserts payload is EdmPayload {
   if (!payload || typeof payload !== 'object') {
@@ -71,13 +96,19 @@ function validateEdmPayload(payload: unknown): asserts payload is EdmPayload {
 
   const p = payload as Record<string, unknown>;
 
-  // Check for required domains (meta and core are typically required)
+  // Basic structure check
   if (!p.meta || typeof p.meta !== 'object') {
     throw new Error("Invalid EDM payload: missing required domain 'meta'");
   }
 
   if (!p.core || typeof p.core !== 'object') {
     throw new Error("Invalid EDM payload: missing required domain 'core'");
+  }
+
+  // Full schema validation against profile
+  const result = validateEdmSchema(payload);
+  if (!result.valid) {
+    throw new SchemaValidationError(result.profile, result.errors);
   }
 }
 

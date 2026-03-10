@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EDM CONSTELLATION Domain",
+  "type": "object",
+  "properties": {
+    "emotion_primary": {
+      "description": "The dominant emotional quality expressed in the experience",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "joy",
+        "sadness",
+        "fear",
+        "anger",
+        "wonder",
+        "peace",
+        "tenderness",
+        "reverence",
+        "pride",
+        "anxiety",
+        "gratitude",
+        "longing",
+        "hope"
+      ],
+      "x_constraints": "joy, sadness, fear, anger, wonder, peace, tenderness, reverence, pride, anxiety, gratitude, longing, hope"
+    },
+    "emotion_subtone": {
+      "description": "Secondary emotional nuances that add depth to the primary emotion",
+      "type": "array",
+      "x_constraints": "0–4 items (e.g., \"bittersweet\", \"grateful\", \"nostalgic\")",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 0,
+      "maxItems": 4
+    },
+    "higher_order_emotion": {
+      "description": "Complex or layered emotional state",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Free text (e.g., \"awe\", \"bittersweetness\", \"pride\", \"moral elevation\")"
+    },
+    "meta_emotional_state": {
+      "description": "How the person relates to their own emotional state",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Free text (e.g., \"acceptance\", \"resistance\", \"curiosity\", \"confusion\")"
+    },
+    "interpersonal_affect": {
+      "description": "Emotional posture in relational context",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Free text (e.g., \"warmth\", \"defensiveness\", \"openness\")"
+    },
+    "narrative_arc": {
+      "description": "The underlying trajectory or story movement represented by the moment",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "overcoming",
+        "transformation",
+        "connection",
+        "reflection",
+        "closure"
+      ],
+      "x_constraints": "overcoming, transformation, connection, reflection, closure"
+    },
+    "relational_dynamics": {
+      "description": "The dominant relational configuration influencing the experience",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "parent_child",
+        "romantic_partnership",
+        "sibling_bond",
+        "family",
+        "friendship",
+        "companionship",
+        "mentorship",
+        "reunion",
+        "community_ritual",
+        "grief",
+        "self_reflection",
+        "professional",
+        "therapeutic",
+        "service",
+        "adversarial"
+      ],
+      "x_constraints": "parent_child, romantic_partnership, sibling_bond, family, friendship, companionship, mentorship, reunion, community_ritual, grief, self_reflection, professional, therapeutic, service, adversarial"
+    },
+    "temporal_context": {
+      "description": "The life-stage or temporal frame associated with the experience",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "childhood",
+        "early_adulthood",
+        "midlife",
+        "late_life",
+        "recent",
+        "future",
+        "timeless"
+      ],
+      "x_constraints": "childhood, early_adulthood, midlife, late_life, recent, future, timeless"
+    },
+    "memory_type": {
+      "description": "The class of memory the experience represents within personal identity",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "legacy_artifact",
+        "fleeting_moment",
+        "milestone",
+        "reflection",
+        "formative_experience"
+      ],
+      "x_constraints": "legacy_artifact, fleeting_moment, milestone, reflection, formative_experience"
+    },
+    "media_format": {
+      "description": "The format through which the experience is captured or expressed",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "photo",
+        "video",
+        "audio",
+        "text",
+        "photo_with_story"
+      ],
+      "x_constraints": "photo, video, audio, text, photo_with_story"
+    },
+    "narrative_archetype": {
+      "description": "The structural role or literary trope the subject occupies within the narrative",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "hero",
+        "caregiver",
+        "seeker",
+        "sage",
+        "lover",
+        "outlaw",
+        "innocent",
+        "magician",
+        "creator",
+        "everyman",
+        "jester",
+        "ruler",
+        "mentor"
+      ],
+      "x_constraints": "hero, caregiver, seeker, sage, lover, outlaw, innocent, magician, creator, everyman, jester, ruler, mentor"
+    },
+    "symbolic_anchor": {
+      "description": "A symbolic or material object, place, or element that concentrates meaning",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Free text (e.g., \"rocking chair\", \"wedding ring\", \"grandmother's kitchen\")"
+    },
+    "relational_perspective": {
+      "description": "The perspective through which the experience is narrated or understood",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "self",
+        "partner",
+        "family",
+        "friends",
+        "community",
+        "humanity"
+      ],
+      "x_constraints": "self, partner, family, friends, community, humanity"
+    },
+    "temporal_rhythm": {
+      "description": "The perceived temporal movement or cadence of the emotional event",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "still",
+        "sudden",
+        "rising",
+        "fading",
+        "recurring",
+        "spiraling",
+        "dragging",
+        "suspended",
+        "looping",
+        "cyclic"
+      ],
+      "x_constraints": "still, sudden, rising, fading, recurring, spiraling, dragging, suspended, looping, cyclic"
+    },
+    "identity_thread": {
+      "description": "A succinct expression of how the experience connects to personal identity",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Short sentence"
+    },
+    "expressed_insight": {
+      "description": "The explicit realization or conclusion stated by the subject",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Short sentence. Extracted, not inferred"
+    },
+    "transformational_pivot": {
+      "description": "Marks experiences the subject explicitly identifies as life-changing or trajectory-altering at time of extraction",
+      "type": "boolean",
+      "x_constraints": "true or false"
+    },
+    "somatic_signature": {
+      "description": "Bodily or interoceptive sensations explicitly described by the subject as part of the emotional experience",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Short phrases extracted from stated physical sensations only; NULL when not mentioned"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "emotion_primary",
+    "emotion_subtone",
+    "narrative_arc"
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EDM GRAVITY Domain",
+  "type": "object",
+  "properties": {
+    "emotional_weight": {
+      "description": "The felt intensity of the emotional experience",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x_constraints": "0.0–1.0"
+    },
+    "emotional_density": {
+      "description": "How concentrated or layered the emotional content is",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "x_constraints": "low, medium, high"
+    },
+    "valence": {
+      "description": "The qualitative direction of the emotional experience",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "positive",
+        "negative",
+        "mixed"
+      ],
+      "x_constraints": "positive, negative, mixed"
+    },
+    "viscosity": {
+      "description": "The perceived \"stickiness\" or persistence of the emotion",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "enduring",
+        "fluid"
+      ],
+      "x_constraints": "low, medium, high, enduring, fluid"
+    },
+    "gravity_type": {
+      "description": "Category or nature of the emotional pull",
+      "type": [
+        "string",
+        "null"
+      ],
+      "x_constraints": "Free text (e.g., \"symbolic resonance\", \"relational bond\", \"identity anchor\")"
+    },
+    "tether_type": {
+      "description": "The type of element to which the experience is emotionally anchored",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "person",
+        "symbol",
+        "event",
+        "place",
+        "ritual",
+        "object",
+        "tradition",
+        "identity",
+        null
+      ],
+      "x_constraints": "person, symbol, event, place, ritual, object, tradition"
+    },
+    "recall_triggers": {
+      "description": "Sensory or symbolic cues that reactivate the memory",
+      "type": [
+        "array",
+        "null"
+      ],
+      "x_constraints": "Short phrases, lowercase (e.g., \"smell of bread\", \"old songs\", \"rain sounds\")",
+      "items": {
+        "type": "string"
+      }
+    },
+    "retrieval_keys": {
+      "description": "Compact hooks for memory retrieval",
+      "type": [
+        "array",
+        "null"
+      ],
+      "x_constraints": "3–6 tokens (e.g., \"grandmother\", \"kitchen\", \"warmth\", \"tradition\")",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nearby_themes": {
+      "description": "Adjacent themes or motifs connected to the experience",
+      "type": [
+        "array",
+        "null"
+      ],
+      "x_constraints": "Concepts or emotions (e.g., \"family\", \"tradition\", \"loss\", \"continuity\")",
+      "items": {
+        "type": "string"
+      }
+    },
+    "legacy_embed": {
+      "description": "Whether the moment contributes to long-term identity or life-story continuity",
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "x_constraints": "true or false"
+    },
+    "recurrence_pattern": {
+      "description": "The temporal recurrence structure extracted from the experience's context, framing, and temporal markers",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "cyclical",
+        "isolated",
+        "chronic",
+        "emerging"
+      ],
+      "x_constraints": "cyclical, isolated, chronic, emerging; NULL when pattern cannot be determined"
+    },
+    "strength_score": {
+      "description": "The binding strength of the emotion within the broader emotional network",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x_constraints": "0.0–1.0"
+    },
+    "temporal_decay": {
+      "description": "How quickly the emotional intensity is expected to diminish over time",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "fast",
+        "moderate",
+        "slow"
+      ],
+      "x_constraints": "fast, moderate, slow"
+    },
+    "resilience_markers": {
+      "description": "Indicators of stabilizing or constructive emotional processing",
+      "type": [
+        "array",
+        "null"
+      ],
+      "x_constraints": "1–3 items (e.g., \"acceptance\", \"optimism\", \"continuity\")",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 3
+    },
+    "adaptation_trajectory": {
+      "description": "How the emotional state is evolving across time",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "improving",
+        "stable",
+        "declining",
+        "integrative",
+        "emerging"
+      ],
+      "x_constraints": "improving, stable, declining, integrative, emerging"
+    }
+  },
+  "additionalProperties": false
+}

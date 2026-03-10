@@ -1,0 +1,150 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EDM GOVERNANCE Domain",
+  "type": "object",
+  "properties": {
+    "jurisdiction": {
+      "description": "The regulatory regime governing this artifact",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "GDPR",
+        "CCPA",
+        "HIPAA",
+        "PIPEDA",
+        "LGPD",
+        "None",
+        "Mixed",
+        null
+      ]
+    },
+    "retention_policy": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "basis": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "user_defined",
+            "legal",
+            "business_need",
+            null
+          ]
+        },
+        "ttl_days": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "on_expiry": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "soft_delete",
+            "hard_delete",
+            "anonymize",
+            null
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "subject_rights": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "portable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "erasable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "explainable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "exportability": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "allowed",
+        "restricted",
+        "forbidden",
+        null
+      ]
+    },
+    "k_anonymity": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "k": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "groups": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy_labels": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "masking_rules": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "jurisdiction",
+    "retention_policy",
+    "subject_rights"
+  ]
+}
