@@ -5,8 +5,6 @@
  * FREE: Does not require a DeepaData API key.
  */
 
-import type { EdmPayload } from './types.js';
-
 /**
  * Validation error detail
  */
@@ -42,20 +40,6 @@ const SCHEMA_VERSION = '0.5.1';
  * Required domains in an EDM artifact
  */
 const REQUIRED_DOMAINS = ['meta', 'core'] as const;
-
-/**
- * Optional domains in an EDM artifact
- */
-const OPTIONAL_DOMAINS = [
-  'constellation',
-  'milky_way',
-  'gravity',
-  'impulse',
-  'governance',
-  'telemetry',
-  'system',
-  'crosswalks',
-] as const;
 
 /**
  * Required fields in meta domain

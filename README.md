@@ -9,7 +9,7 @@ Reference implementation for the .ddna signing specification. Creates and verifi
 - `verify()` — verify a sealed .ddna envelope
 - `inspect()` — read envelope contents
 - `redact()` — stateless mode, null sensitive fields
-- `validate()` — schema validation against EDM v0.5.1
+- `validate()` — schema validation against EDM v0.6.0
 - `isExpired()` — check artifact TTL (24h default)
 
 ### Commercial (API key required)
@@ -93,7 +93,7 @@ ddna inspect [options] <input>
 
 ### `ddna validate`
 
-Validate an EDM artifact against the v0.5.1 schema.
+Validate an EDM artifact against the v0.6.0 schema.
 
 ```bash
 ddna validate [options] <input>
@@ -106,7 +106,7 @@ ddna validate [options] <input>
 ```bash
 ddna validate artifact.edm.json
 # VALID - Schema validation passed
-#   Schema Version: 0.5.1
+#   Schema Version: 0.6.0
 ```
 
 ### `ddna redact`
@@ -249,7 +249,7 @@ A `.ddna` envelope contains three components:
   "ddna_header": {
     "ddna_version": "1.1",
     "created_at": "2026-01-15T10:00:00Z",
-    "edm_version": "0.5.1",
+    "edm_version": "0.6.0",
     "jurisdiction": "AU",
     "exportability": "allowed"
   },

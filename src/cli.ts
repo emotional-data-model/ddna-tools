@@ -26,6 +26,7 @@ import { inspect, inspectJson } from './lib/inspect.js';
 import { keygen, keyToHex, hexToKey } from './lib/keygen.js';
 import { redact, isExpired } from './lib/stateless.js';
 import { validate } from './lib/validate.js';
+import type { EdmPayload } from './lib/types.js';
 
 // Get package version
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -347,7 +348,7 @@ program
       const artifact = readJsonFile(input);
 
       // Redact
-      const result = redact(artifact);
+      const result = redact(artifact as EdmPayload);
 
       if (options.output) {
         // Write to file
@@ -386,7 +387,7 @@ program
       const ttlHours = parseInt(options.ttl, 10);
 
       // Check TTL
-      const result = isExpired(artifact, ttlHours);
+      const result = isExpired(artifact as EdmPayload, ttlHours);
 
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));
