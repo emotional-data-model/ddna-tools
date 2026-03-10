@@ -12,7 +12,7 @@
 import * as ed25519 from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
 import { isValidDidUrl } from './did.js';
-import { validateEdmSchema } from './validate-schema.js';
+import { validateEdmSchemaSync } from './validate-schema.js';
 import type {
   EdmPayload,
   DdnaHeader,
@@ -105,8 +105,8 @@ function validateEdmPayload(payload: unknown): asserts payload is EdmPayload {
     throw new Error("Invalid EDM payload: missing required domain 'core'");
   }
 
-  // Full schema validation against profile
-  const result = validateEdmSchema(payload);
+  // Full schema validation against profile (sync version for pre-seal validation)
+  const result = validateEdmSchemaSync(payload);
   if (!result.valid) {
     throw new SchemaValidationError(result.profile, result.errors);
   }

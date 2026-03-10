@@ -42,8 +42,11 @@ export { validate, isValid } from './validate.js';
 export type { ValidationResult, ValidationError } from './validate.js';
 
 // EDM profile schema validation (free)
+// validateEdmSchema (async) fetches from canonical URL with bundled fallback
+// validateEdmSchemaSync uses bundled schemas only (for sync contexts)
 export {
   validateEdmSchema,
+  validateEdmSchemaSync,
   detectProfile,
   formatValidationErrors,
 } from './validate-schema.js';
