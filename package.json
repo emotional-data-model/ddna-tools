@@ -43,12 +43,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/deepadata/deepadata-ddna-tools.git"
+    "url": "git+https://github.com/emotional-data-model/ddna-tools.git"
   },
   "bugs": {
-    "url": "https://github.com/deepadata/deepadata-ddna-tools/issues"
+    "url": "https://github.com/emotional-data-model/ddna-tools/issues"
   },
-  "homepage": "https://github.com/deepadata/deepadata-ddna-tools#readme",
+  "homepage": "https://github.com/emotional-data-model/ddna-tools#readme",
   "engines": {
     "node": ">=18.0.0"
   },

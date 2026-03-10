@@ -232,7 +232,7 @@ console.log('Valid:', result.valid);
 
 ## Specification
 
-This implementation follows the [DDNA Signing Model Specification](https://github.com/deepadata/deepadata-edm-spec/blob/main/docs/DDNA_SIGNING_MODEL.md).
+This implementation follows the [DDNA Signing Model Specification](https://github.com/emotional-data-model/edm-spec/blob/main/docs/DDNA_SIGNING_MODEL.md).
 
 **Key standards:**
 - [W3C Data Integrity 1.0](https://www.w3.org/TR/vc-data-integrity/)
