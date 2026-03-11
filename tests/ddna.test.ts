@@ -148,7 +148,7 @@ describe('seal', () => {
     const privateKey = hexToKey(testKeys.privateKey);
     const envelope = await seal(minimalEdm, privateKey, testKeys.did);
 
-    expect(envelope.ddna_header.jurisdiction).toBe('AU');
+    expect(envelope.ddna_header.jurisdiction).toBe('GDPR');
     expect(envelope.ddna_header.exportability).toBe('allowed');
   });
 
@@ -211,7 +211,9 @@ describe('verify', () => {
 
   it('should detect tampered payload', async () => {
     const privateKey = hexToKey(testKeys.privateKey);
-    const envelope = await seal(minimalEdm, privateKey, testKeys.did);
+    // Use deep copy to avoid mutating shared minimalEdm
+    const edmCopy = JSON.parse(JSON.stringify(minimalEdm));
+    const envelope = await seal(edmCopy, privateKey, testKeys.did);
 
     // Tamper with payload
     (envelope.edm_payload as Record<string, unknown>).tampered = true;
@@ -320,7 +322,9 @@ describe('inspect', () => {
 
   it('should show invalid signature status', async () => {
     const privateKey = hexToKey(testKeys.privateKey);
-    const envelope = await seal(minimalEdm, privateKey, testKeys.did);
+    // Use deep copy to avoid mutating shared minimalEdm
+    const edmCopy = JSON.parse(JSON.stringify(minimalEdm));
+    const envelope = await seal(edmCopy, privateKey, testKeys.did);
 
     // Tamper
     (envelope.edm_payload as Record<string, unknown>).tampered = true;

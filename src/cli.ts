@@ -2,16 +2,16 @@
 /**
  * ddna - Command line interface for .ddna signing tools
  *
- * Free Commands (no API key needed):
+ * Commands:
  *   keygen    - Generate Ed25519 key pair
+ *   seal      - Seal an EDM artifact into a .ddna envelope (local signing)
  *   verify    - Verify a .ddna envelope signature
  *   inspect   - Inspect a .ddna envelope
  *   validate  - Validate EDM artifact against schema
  *   redact    - Redact sensitive fields for stateless mode
  *   check-ttl - Check if artifact has expired (24h TTL)
  *
- * Commercial Commands (API key required):
- *   seal      - Seal an EDM artifact into a .ddna envelope ($0.005/seal)
+ * All commands run locally. No external API required.
  */
 
 import { Command } from 'commander';
@@ -109,14 +109,16 @@ function getOutputPath(inputPath: string, extension: string): string {
 
 program
   .command('seal')
-  .description('Seal an EDM artifact into a .ddna envelope (requires API key)')
+  .description('Seal an EDM artifact into a .ddna envelope (local Ed25519 signing)')
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .requiredOption('-k, --key <path>', 'Path to private key file (hex-encoded)')
   .requiredOption('-d, --did <url>', 'DID URL for verification method')
-  .option('-a, --api-key <key>', 'DeepaData API key (or set DEEPADATA_API_KEY env var)')
   .option('-o, --output <path>', 'Output path (default: <input>.ddna)')
   .option('--jurisdiction <code>', 'Override jurisdiction code (e.g., AU, US)')
   .option('--expires <iso8601>', 'Proof expiration timestamp')
+  .option('--domain <domain>', 'Domain restriction for proof')
+  .option('--challenge <value>', 'Challenge value for proof')
+  .option('--nonce <value>', 'Nonce for replay prevention')
   .action(async (input: string, options) => {
     try {
       // Read input file
@@ -125,26 +127,13 @@ program
       // Read private key
       const privateKey = readPrivateKey(options.key);
 
-      // Resolve API key
-      const apiKey = options.apiKey || process.env['DEEPADATA_API_KEY'];
-      if (!apiKey) {
-        console.error(chalk.red('Error:') + ' Sealing requires a DeepaData API key.');
-        console.error('  Get one at: ' + chalk.cyan('https://deepadata.com/api-keys'));
-        console.error('  Pricing: ' + chalk.cyan('https://deepadata.com/pricing'));
-        console.error('');
-        console.error('  Set via:');
-        console.error('    --api-key <key>');
-        console.error('    DEEPADATA_API_KEY environment variable');
-        console.error('');
-        console.error('  ' + chalk.dim('verify() and inspect() are always free.'));
-        process.exit(1);
-      }
-
-      // Seal the envelope
+      // Seal the envelope (local signing - no API required)
       const envelope = await seal(edmPayload, privateKey, options.did, {
-        apiKey,
         header: options.jurisdiction ? { jurisdiction: options.jurisdiction } : undefined,
         expires: options.expires,
+        domain: options.domain,
+        challenge: options.challenge,
+        nonce: options.nonce,
       });
 
       // Determine output path
@@ -292,7 +281,7 @@ program
 
 program
   .command('validate')
-  .description('Validate an EDM artifact against v0.5.1 schema (free)')
+  .description('Validate an EDM artifact against v0.6.0 schema')
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('--json', 'Output as JSON')
   .action((input: string, options) => {
@@ -338,7 +327,7 @@ program
 
 program
   .command('redact')
-  .description('Redact sensitive fields for stateless mode (free)')
+  .description('Redact sensitive fields for stateless mode')
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('-o, --output <path>', 'Output path (default: stdout)')
   .option('--json', 'Output as JSON with statistics')
@@ -376,7 +365,7 @@ program
 
 program
   .command('check-ttl')
-  .description('Check if artifact has expired based on 24h TTL (free)')
+  .description('Check if artifact has expired based on 24h TTL')
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('--ttl <hours>', 'Custom TTL in hours (default: 24)', '24')
   .option('--json', 'Output as JSON')

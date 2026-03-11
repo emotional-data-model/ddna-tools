@@ -1,61 +1,47 @@
-# deepadata-ddna-tools
+# ddna-tools
 
 Reference implementation for the .ddna signing specification. Creates and verifies W3C Data Integrity Proofs using Ed25519 signatures with JSON Canonicalization Scheme (JCS).
 
-## Pricing Tiers
-
-### Free (no API key needed)
-- `keygen()` — generate Ed25519 key pair
-- `verify()` — verify a sealed .ddna envelope
-- `inspect()` — read envelope contents
-- `redact()` — stateless mode, null sensitive fields
-- `validate()` — schema validation against EDM v0.6.0
-- `isExpired()` — check artifact TTL (24h default)
-
-### Commercial (API key required)
-- `seal()` — create tamper-evident .ddna envelope
-  - See https://deepadata.com/pricing for current rates
-  - **Get API key:** https://deepadata.com/api-keys
+All operations run locally. No external API required.
 
 ## Installation
 
 ```bash
-npm install -g deepadata-ddna-tools
+npm install -g ddna-tools
 ```
 
 Or use directly with npx:
 
 ```bash
-npx deepadata-ddna-tools <command>
+npx ddna-tools <command>
 ```
 
 ## Quick Start
 
 ```bash
-# Generate a key pair (free)
+# Generate a key pair
 ddna keygen --output mykey
 
-# Validate an EDM artifact (free)
+# Validate an EDM artifact against v0.6.0 schema
 ddna validate artifact.edm.json
 
-# Seal an EDM artifact (requires API key)
-export DEEPADATA_API_KEY=your-api-key
+# Seal an EDM artifact (local signing)
 ddna seal --key mykey.key --did did:key:z6Mk... artifact.edm.json
 
-# Verify the sealed envelope (free)
+# Verify the sealed envelope
 ddna verify artifact.ddna
 
-# Inspect envelope details (free)
+# Inspect envelope details
 ddna inspect artifact.ddna
 
-# Redact for stateless mode (free)
+# Redact for stateless mode
 ddna redact artifact.edm.json -o redacted.json
 
-# Check TTL expiry (free)
+# Check TTL expiry
 ddna check-ttl artifact.edm.json
 ```
 
-## Free Commands
+## Commands
 
 ### `ddna keygen`
 
@@ -68,6 +54,32 @@ ddna keygen [options]
 **Options:**
 - `-o, --output <prefix>` - Output file prefix (creates `<prefix>.key` and `<prefix>.pub`)
 - `--json` - Output as JSON to stdout
+
+### `ddna seal`
+
+Seal an EDM artifact into a `.ddna` envelope with a cryptographic signature.
+
+```bash
+ddna seal [options] <input>
+```
+
+**Arguments:**
+- `<input>` - Path to EDM artifact (`.edm.json` or `.json`)
+
+**Options:**
+- `-k, --key <path>` - Path to private key file (hex-encoded) **[required]**
+- `-d, --did <url>` - DID URL for verification method **[required]**
+- `-o, --output <path>` - Output path (default: `<input>.ddna`)
+- `--jurisdiction <code>` - Override jurisdiction code (e.g., GDPR, CCPA)
+- `--expires <iso8601>` - Proof expiration timestamp
+- `--domain <domain>` - Domain restriction for proof
+- `--challenge <value>` - Challenge value for proof
+- `--nonce <value>` - Nonce for replay prevention
+
+**Example:**
+```bash
+ddna seal --key mykey.key --did did:key:z6MkiTBz1... artifact.edm.json
+```
 
 ### `ddna verify`
 
@@ -146,41 +158,12 @@ ddna check-ttl artifact.edm.json
 #   Remaining: 21.5 hours
 ```
 
-## Commercial Commands
-
-### `ddna seal`
-
-Seal an EDM artifact into a `.ddna` envelope with a cryptographic signature.
-
-**Requires:** DeepaData API key (see https://deepadata.com/pricing)
-
-```bash
-ddna seal [options] <input>
-```
-
-**Arguments:**
-- `<input>` - Path to EDM artifact (`.edm.json` or `.json`)
-
-**Options:**
-- `-k, --key <path>` - Path to private key file (hex-encoded) **[required]**
-- `-d, --did <url>` - DID URL for verification method **[required]**
-- `-a, --api-key <key>` - DeepaData API key (or set `DEEPADATA_API_KEY` env var)
-- `-o, --output <path>` - Output path (default: `<input>.ddna`)
-- `--jurisdiction <code>` - Override jurisdiction code (e.g., AU, US)
-- `--expires <iso8601>` - Proof expiration timestamp
-
-**Example:**
-```bash
-export DEEPADATA_API_KEY=dda_live_xxxxx
-ddna seal --key mykey.key --did did:key:z6MkiTBz1... artifact.edm.json
-```
-
 ## Library Usage
 
 ```typescript
 import {
-  // Free functions
   keygen,
+  seal,
   verify,
   inspect,
   validate,
@@ -188,47 +171,56 @@ import {
   isExpired,
   hexToKey,
   keyToHex,
-  // Commercial (requires API key)
-  seal,
-} from 'deepadata-ddna-tools';
+} from 'ddna-tools';
 
-// Generate keys (free)
+// Generate keys
 const keys = keygen();
 console.log('DID:', keys.did);
 
-// Validate against schema (free)
+// Validate against schema
 const validation = validate(edmPayload);
 if (!validation.valid) {
   console.error('Validation errors:', validation.errors);
 }
 
-// Redact for stateless mode (free)
+// Seal an EDM artifact (local signing)
+const envelope = await seal(edmPayload, keys.privateKey, keys.did);
+
+// Verify the envelope
+const result = await verify(envelope);
+console.log('Valid:', result.valid);
+
+// Redact for stateless mode
 const { artifact: redacted, fieldsRedacted } = redact(edmPayload);
 console.log(`Redacted ${fieldsRedacted} fields`);
 
-// Check TTL (free)
+// Check TTL
 const ttl = isExpired(edmPayload, 24);
 if (ttl.expired) {
   console.log('Artifact expired');
 }
-
-// Seal an EDM artifact (requires API key)
-const envelope = await seal(edmPayload, keys.privateKey, keys.did, {
-  apiKey: process.env.DEEPADATA_API_KEY, // or set env var
-});
-
-// Verify the envelope (free)
-const result = await verify(envelope);
-console.log('Valid:', result.valid);
 ```
 
 ## EDM Conformance Levels
 
-| Level | Name | What it means | DeepaData involvement |
-|-------|------|---------------|----------------------|
-| Level 1 | Compliant | Valid EDM schema | None (open source tools) |
-| Level 2 | Sealed | Cryptographically signed .ddna | API key required |
-| Level 3 | Certified | Third-party audit + attestation | Commercial agreement |
+| Level | Name      | Requires                            |
+|-------|-----------|-------------------------------------|
+| 1     | Compliant | EDM schema validation               |
+| 2     | Sealed    | Own signing key (open)              |
+| 3     | Certified | DeepaData API (Extended/Full only)  |
+
+### Profile x Conformance Matrix
+
+| Profile   | Compliant | Sealed | Certified |
+|-----------|-----------|--------|-----------|
+| Essential | Yes       | Yes    | No        |
+| Extended  | Yes       | Yes    | Yes       |
+| Full      | Yes       | Yes    | Yes       |
+
+**Notes:**
+- **Compliant** and **Sealed** are achievable with open-source tools only
+- **Certified** requires DeepaData commercial API for third-party attestation
+- Essential profile is not eligible for Certified conformance
 
 ## Specification
 
@@ -250,7 +242,7 @@ A `.ddna` envelope contains three components:
     "ddna_version": "1.1",
     "created_at": "2026-01-15T10:00:00Z",
     "edm_version": "0.6.0",
-    "jurisdiction": "AU",
+    "jurisdiction": "GDPR",
     "exportability": "allowed"
   },
   "edm_payload": {

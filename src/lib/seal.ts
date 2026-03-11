@@ -2,55 +2,32 @@
  * Sealing: EDM artifact -> .ddna envelope
  * Implements W3C Data Integrity Proofs with eddsa-jcs-2022 cryptosuite
  *
- * IMPORTANT: seal() requires a DeepaData API key.
- * Get one at https://deepadata.com/api-keys
- * See https://deepadata.com/pricing for current rates.
- *
- * Free functions (no API key): verify(), inspect(), keygen(), validate(), redact()
+ * Local self-sealing — no external API required.
+ * Any party may seal artifacts with their own Ed25519 keys.
  */
 
 import * as ed25519 from '@noble/ed25519';
 import { sha512 } from '@noble/hashes/sha512';
+import { sha256 } from '@noble/hashes/sha256';
+import canonicalize from 'canonicalize';
+import { base58btc } from 'multiformats/bases/base58';
 import { isValidDidUrl } from './did.js';
 import { validateEdmSchemaSync } from './validate-schema.js';
 import type {
   EdmPayload,
   DdnaHeader,
   DdnaEnvelope,
+  DataIntegrityProof,
+  ProofOptions,
+  SigningDocument,
 } from './types.js';
 
-// API endpoint for commercial sealing
-const DEEPADATA_SEAL_API = 'https://api.deepadata.com/v1/seal';
-
-/**
- * Error thrown when API key is missing or invalid
- */
-export class SealingApiKeyError extends Error {
-  constructor() {
-    super(
-      'Sealing requires a DeepaData API key.\n' +
-        'Get one at https://deepadata.com/api-keys\n' +
-        'See https://deepadata.com/pricing for current rates.\n\n' +
-        'verify() and inspect() are always free.'
-    );
-    this.name = 'SealingApiKeyError';
-  }
-}
-
-/**
- * Error thrown when the sealing API returns an error
- */
-export class SealingApiError extends Error {
-  public statusCode: number;
-  public apiMessage: string;
-
-  constructor(statusCode: number, apiMessage: string) {
-    super(`Sealing API error (${statusCode}): ${apiMessage}`);
-    this.name = 'SealingApiError';
-    this.statusCode = statusCode;
-    this.apiMessage = apiMessage;
-  }
-}
+// Configure ed25519 to use sha512
+ed25519.etc.sha512Sync = (...msgs) => {
+  const h = sha512.create();
+  for (const msg of msgs) h.update(msg);
+  return h.digest();
+};
 
 /**
  * Error thrown when schema validation fails
@@ -72,12 +49,20 @@ export class SchemaValidationError extends Error {
   }
 }
 
-// Configure ed25519 to use sha512
-ed25519.etc.sha512Sync = (...msgs) => {
-  const h = sha512.create();
-  for (const msg of msgs) h.update(msg);
-  return h.digest();
-};
+/**
+ * Error thrown when signing key is missing
+ */
+export class SealingKeyError extends Error {
+  constructor(message?: string) {
+    super(
+      message ||
+      'No signing key provided.\n' +
+      'Run: ddna keygen --output mykey\n' +
+      'Then: ddna seal --key mykey.key ...'
+    );
+    this.name = 'SealingKeyError';
+  }
+}
 
 /**
  * Validate EDM payload against profile schema
@@ -116,12 +101,6 @@ function validateEdmPayload(payload: unknown): asserts payload is EdmPayload {
  * Seal options for customizing the sealing process
  */
 export interface SealOptions {
-  /**
-   * DeepaData API key (required)
-   * Get one at https://deepadata.com/api-keys
-   * Also reads from DEEPADATA_API_KEY environment variable
-   */
-  apiKey?: string;
   /** Override ddna_header fields */
   header?: Partial<DdnaHeader>;
   /** Optional proof expiration (ISO 8601) */
@@ -137,38 +116,86 @@ export interface SealOptions {
 }
 
 /**
- * Resolve API key from options or environment
+ * Build ddna_header from EDM payload
  */
-function resolveApiKey(options?: SealOptions): string {
-  const apiKey = options?.apiKey ?? process.env['DEEPADATA_API_KEY'];
-  if (!apiKey) {
-    throw new SealingApiKeyError();
+function buildDdnaHeader(edmPayload: EdmPayload, overrides?: Partial<DdnaHeader>): DdnaHeader {
+  const meta = edmPayload.meta || {};
+  const governance = edmPayload.governance as Record<string, unknown> || {};
+
+  // Extract profile from meta
+  const profile = (meta as Record<string, unknown>).profile as string || 'full';
+
+  // Build header with defaults and EDM payload values
+  const header: DdnaHeader = {
+    ddna_version: '1.1',
+    created_at: new Date().toISOString(),
+    edm_version: (meta as Record<string, unknown>).version as string || '0.6.0',
+    owner_user_id: meta.owner_user_id || null,
+    exportability: (governance.exportability as DdnaHeader['exportability']) || 'allowed',
+    jurisdiction: (governance.jurisdiction as string) || 'XX',
+    payload_type: `edm.v0.6.${profile}`,
+    consent_basis: meta.consent_basis || 'consent',
+    retention_policy: (governance.retention_policy as DdnaHeader['retention_policy']) || {
+      basis: 'user_defined',
+      ttl_days: null,
+      on_expiry: 'soft_delete',
+    },
+    masking_rules: (governance.masking_rules as string[]) || [],
+    audit_chain: [{
+      timestamp: new Date().toISOString(),
+      event: 'created',
+      agent: 'ddna-tools',
+    }],
+  };
+
+  // Apply overrides
+  if (overrides) {
+    Object.assign(header, overrides);
   }
-  return apiKey;
+
+  return header;
 }
 
 /**
- * Convert Uint8Array to hex string
+ * Compute the signing input from document and proof options
+ * Follows W3C Data Integrity eddsa-jcs-2022 specification
  */
-function uint8ArrayToHex(arr: Uint8Array): string {
-  return Array.from(arr)
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+function computeSigningInput(
+  proofOptions: ProofOptions,
+  document: SigningDocument
+): Uint8Array {
+  // Canonicalize both objects with JCS (RFC 8785)
+  const canonicalProofOptions = canonicalize(proofOptions);
+  const canonicalDocument = canonicalize(document);
+
+  if (!canonicalProofOptions || !canonicalDocument) {
+    throw new Error('Canonicalization failed during signing');
+  }
+
+  // Hash each canonical form with SHA-256
+  const proofOptionsHash = sha256(new TextEncoder().encode(canonicalProofOptions));
+  const documentHash = sha256(new TextEncoder().encode(canonicalDocument));
+
+  // Concatenate hashes (64 bytes total)
+  const signingInput = new Uint8Array(64);
+  signingInput.set(proofOptionsHash, 0);
+  signingInput.set(documentHash, 32);
+
+  return signingInput;
 }
 
 /**
  * Seal an EDM payload into a .ddna envelope
  *
- * REQUIRES: DeepaData API key ($0.005 per seal)
- * Set DEEPADATA_API_KEY environment variable or pass options.apiKey
+ * Local self-sealing with Ed25519. No external API required.
  *
  * @param edmPayload - The EDM artifact to seal
  * @param privateKey - 32-byte Ed25519 private key
- * @param verificationMethod - DID URL for the verification method
- * @param options - Sealing options (apiKey required)
+ * @param verificationMethod - DID URL for the verification method (e.g., did:key:z6Mk...)
+ * @param options - Optional sealing options
  * @returns Sealed .ddna envelope
- * @throws SealingApiKeyError if no API key is provided
- * @throws SealingApiError if the API returns an error
+ * @throws SealingKeyError if no key is provided
+ * @throws SchemaValidationError if payload validation fails
  */
 export async function seal(
   edmPayload: object,
@@ -176,10 +203,11 @@ export async function seal(
   verificationMethod: string,
   options?: SealOptions
 ): Promise<DdnaEnvelope> {
-  // Step 1: Validate API key (required for commercial sealing)
-  const apiKey = resolveApiKey(options);
+  // Step 1: Validate inputs
+  if (!privateKey || privateKey.length === 0) {
+    throw new SealingKeyError();
+  }
 
-  // Step 2: Validate inputs
   validateEdmPayload(edmPayload);
 
   if (privateKey.length !== 32) {
@@ -190,67 +218,148 @@ export async function seal(
     throw new Error(`Invalid verification method: ${verificationMethod}`);
   }
 
-  // Step 3: Prepare request payload for API
-  const requestPayload = {
-    edm_payload: edmPayload,
-    private_key_hex: uint8ArrayToHex(privateKey),
-    verification_method: verificationMethod,
-    options: {
-      header: options?.header,
-      expires: options?.expires,
-      domain: options?.domain,
-      challenge: options?.challenge,
-      nonce: options?.nonce,
-      created: options?.created,
-    },
+  // Step 2: Build ddna_header
+  const ddnaHeader = buildDdnaHeader(edmPayload as EdmPayload, options?.header);
+
+  // Step 3: Create the document to sign (without proof)
+  const document: SigningDocument = {
+    ddna_header: ddnaHeader,
+    edm_payload: edmPayload as EdmPayload,
   };
 
-  // Step 4: Call DeepaData sealing API
-  const response = await fetch(DEEPADATA_SEAL_API, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-      'User-Agent': 'deepadata-ddna-tools/0.2.0',
-    },
-    body: JSON.stringify(requestPayload),
-  });
+  // Step 4: Create proof options (all fields except proofValue)
+  const created = options?.created || new Date().toISOString();
+  const proofOptions: ProofOptions = {
+    type: 'DataIntegrityProof',
+    cryptosuite: 'eddsa-jcs-2022',
+    created,
+    verificationMethod,
+    proofPurpose: 'assertionMethod',
+  };
 
-  // Step 5: Handle API response
-  if (!response.ok) {
-    let errorMessage = 'Unknown error';
-    try {
-      const errorBody = (await response.json()) as { error?: string; message?: string };
-      errorMessage = errorBody.error || errorBody.message || errorMessage;
-    } catch {
-      errorMessage = await response.text();
-    }
-    throw new SealingApiError(response.status, errorMessage);
+  // Add optional proof fields
+  if (options?.expires) {
+    (proofOptions as DataIntegrityProof).expires = options.expires;
+  }
+  if (options?.domain) {
+    (proofOptions as DataIntegrityProof).domain = options.domain;
+  }
+  if (options?.challenge) {
+    (proofOptions as DataIntegrityProof).challenge = options.challenge;
+  }
+  if (options?.nonce) {
+    (proofOptions as DataIntegrityProof).nonce = options.nonce;
   }
 
-  // Step 6: Parse and return envelope
-  const envelope = (await response.json()) as DdnaEnvelope;
+  // Step 5: Compute signing input
+  const signingInput = computeSigningInput(proofOptions, document);
+
+  // Step 6: Sign with Ed25519
+  const signature = await ed25519.signAsync(signingInput, privateKey);
+
+  // Step 7: Encode signature as multibase base58-btc (prefix 'z')
+  const proofValue = base58btc.encode(signature);
+
+  // Step 8: Assemble complete proof
+  const proof: DataIntegrityProof = {
+    ...proofOptions,
+    proofValue,
+  };
+
+  // Step 9: Assemble and return envelope
+  const envelope: DdnaEnvelope = {
+    ddna_header: ddnaHeader,
+    edm_payload: edmPayload as EdmPayload,
+    proof,
+  };
+
   return envelope;
 }
 
 /**
- * Synchronous sealing is no longer supported.
+ * Synchronous version of seal for environments that support it
  *
- * Sealing requires a DeepaData API key and must use the async seal() function.
- * This function is deprecated and will throw an error.
- *
- * @deprecated Use seal() instead
- * @throws Error directing users to use async seal()
+ * @param edmPayload - The EDM artifact to seal
+ * @param privateKey - 32-byte Ed25519 private key
+ * @param verificationMethod - DID URL for the verification method
+ * @param options - Optional sealing options
+ * @returns Sealed .ddna envelope
  */
 export function sealSync(
-  _edmPayload: object,
-  _privateKey: Uint8Array,
-  _verificationMethod: string,
-  _options?: SealOptions
+  edmPayload: object,
+  privateKey: Uint8Array,
+  verificationMethod: string,
+  options?: SealOptions
 ): DdnaEnvelope {
-  throw new Error(
-    'sealSync() is no longer supported.\n' +
-      'Sealing requires a DeepaData API key and must use the async seal() function.\n' +
-      'Get an API key at https://deepadata.com/api-keys'
-  );
+  // Step 1: Validate inputs
+  if (!privateKey || privateKey.length === 0) {
+    throw new SealingKeyError();
+  }
+
+  validateEdmPayload(edmPayload);
+
+  if (privateKey.length !== 32) {
+    throw new Error(`Invalid private key length: expected 32 bytes, got ${privateKey.length}`);
+  }
+
+  if (!isValidDidUrl(verificationMethod)) {
+    throw new Error(`Invalid verification method: ${verificationMethod}`);
+  }
+
+  // Step 2: Build ddna_header
+  const ddnaHeader = buildDdnaHeader(edmPayload as EdmPayload, options?.header);
+
+  // Step 3: Create the document to sign (without proof)
+  const document: SigningDocument = {
+    ddna_header: ddnaHeader,
+    edm_payload: edmPayload as EdmPayload,
+  };
+
+  // Step 4: Create proof options
+  const created = options?.created || new Date().toISOString();
+  const proofOptions: ProofOptions = {
+    type: 'DataIntegrityProof',
+    cryptosuite: 'eddsa-jcs-2022',
+    created,
+    verificationMethod,
+    proofPurpose: 'assertionMethod',
+  };
+
+  // Add optional proof fields
+  if (options?.expires) {
+    (proofOptions as DataIntegrityProof).expires = options.expires;
+  }
+  if (options?.domain) {
+    (proofOptions as DataIntegrityProof).domain = options.domain;
+  }
+  if (options?.challenge) {
+    (proofOptions as DataIntegrityProof).challenge = options.challenge;
+  }
+  if (options?.nonce) {
+    (proofOptions as DataIntegrityProof).nonce = options.nonce;
+  }
+
+  // Step 5: Compute signing input
+  const signingInput = computeSigningInput(proofOptions, document);
+
+  // Step 6: Sign with Ed25519 (sync)
+  const signature = ed25519.sign(signingInput, privateKey);
+
+  // Step 7: Encode signature as multibase base58-btc
+  const proofValue = base58btc.encode(signature);
+
+  // Step 8: Assemble complete proof
+  const proof: DataIntegrityProof = {
+    ...proofOptions,
+    proofValue,
+  };
+
+  // Step 9: Assemble and return envelope
+  const envelope: DdnaEnvelope = {
+    ddna_header: ddnaHeader,
+    edm_payload: edmPayload as EdmPayload,
+    proof,
+  };
+
+  return envelope;
 }

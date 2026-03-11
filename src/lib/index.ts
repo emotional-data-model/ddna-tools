@@ -1,47 +1,43 @@
 /**
- * deepadata-ddna-tools v0.2.0
+ * ddna-tools v0.3.0
  * Reference implementation for .ddna signing specification
  *
  * W3C Data Integrity Proofs with eddsa-jcs-2022 cryptosuite
  *
- * ## Free (no API key needed)
- * - keygen() — generate Ed25519 key pair
+ * All operations are local. No external API required.
+ *
+ * - keygen() — generate Ed25519 key pair with DID
+ * - seal() — create tamper-evident .ddna envelope (local signing)
  * - verify() — verify a sealed .ddna envelope
  * - inspect() — read envelope contents
  * - redact() — stateless mode, null sensitive fields
- * - validate() — schema validation
+ * - validate() — schema validation against EDM v0.6.0
  * - isExpired() — check artifact TTL
- *
- * ## Commercial (API key required)
- * - seal() — create tamper-evident .ddna envelope
- *
- * Get API key at https://deepadata.com/api-keys
- * See https://deepadata.com/pricing for current rates.
  */
 
-// Core signing functions (seal requires API key)
-export { seal, sealSync, SealingApiKeyError, SealingApiError, SchemaValidationError } from './seal.js';
+// Core signing functions (local Ed25519 signing)
+export { seal, sealSync, SealingKeyError, SchemaValidationError } from './seal.js';
 export type { SealOptions } from './seal.js';
 
-// Verification (free)
+// Verification
 export { verify, verifySync } from './verify.js';
 export type { VerifyOptions } from './verify.js';
 
-// Inspection (free)
+// Inspection
 export { inspect, inspectEnvelope, inspectJson } from './inspect.js';
 
-// Key generation (free)
+// Key generation
 export { keygen, deriveKeyPair, keyToHex, hexToKey } from './keygen.js';
 
-// Stateless mode utilities (free)
+// Stateless mode utilities
 export { redact, isExpired, isStateless } from './stateless.js';
 export type { RedactionResult, TtlResult } from './stateless.js';
 
-// Schema validation (free)
+// Schema validation
 export { validate, isValid } from './validate.js';
 export type { ValidationResult, ValidationError } from './validate.js';
 
-// EDM profile schema validation (free)
+// EDM profile schema validation (v0.6.0)
 // validateEdmSchema (async) fetches from canonical URL with bundled fallback
 // validateEdmSchemaSync uses bundled schemas only (for sync contexts)
 export {
