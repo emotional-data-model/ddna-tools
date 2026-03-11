@@ -178,32 +178,44 @@ async function resolveRefsAsync(
     return schema;
   }
 
-  // If this node has a $ref to a fragment, inline it
-  if (typeof schema['$ref'] === 'string' && schema['$ref'].startsWith('fragments/')) {
-    const fragmentName = schema['$ref'].replace('fragments/', '');
+  // If this node has a $ref, resolve it
+  if (typeof schema['$ref'] === 'string') {
+    const ref = schema['$ref'];
+    let fragmentName: string | null = null;
 
-    let fragment: Record<string, unknown> | null = null;
-
-    if (useRemote && version) {
-      fragment = await fetchRemoteFragment(version, fragmentName);
+    // Handle relative refs: "fragments/governance.json"
+    if (ref.startsWith('fragments/')) {
+      fragmentName = ref.replace('fragments/', '');
+    }
+    // Handle absolute refs: "https://deepadata.com/schemas/edm/v0.6.0/fragments/governance.json"
+    else if (ref.startsWith(SCHEMA_BASE_URL) && ref.includes('/fragments/')) {
+      fragmentName = ref.split('/fragments/')[1];
     }
 
-    if (!fragment) {
-      // Fall back to bundled fragment
-      try {
-        const fragmentPath = join(SCHEMAS_DIR, 'fragments', fragmentName);
-        fragment = JSON.parse(readFileSync(fragmentPath, 'utf-8'));
-      } catch {
+    if (fragmentName) {
+      let fragment: Record<string, unknown> | null = null;
+
+      if (useRemote && version) {
+        fragment = await fetchRemoteFragment(version, fragmentName);
+      }
+
+      if (!fragment) {
+        // Fall back to bundled fragment
+        try {
+          const fragmentPath = join(SCHEMAS_DIR, 'fragments', fragmentName);
+          fragment = JSON.parse(readFileSync(fragmentPath, 'utf-8'));
+        } catch {
+          return { type: 'object' };
+        }
+      }
+
+      // TypeScript guard: fragment is guaranteed non-null here
+      if (!fragment) {
         return { type: 'object' };
       }
-    }
 
-    // TypeScript guard: fragment is guaranteed non-null here
-    if (!fragment) {
-      return { type: 'object' };
+      return resolveRefsAsync(fragment, version, useRemote);
     }
-
-    return resolveRefsAsync(fragment, version, useRemote);
   }
 
   // Recursively resolve refs in all properties
@@ -237,13 +249,28 @@ function resolveRefsSync(
     return schema;
   }
 
-  if (typeof schema['$ref'] === 'string' && schema['$ref'].startsWith('fragments/')) {
-    const fragmentPath = join(schemasDir, schema['$ref']);
-    try {
-      const fragment = JSON.parse(readFileSync(fragmentPath, 'utf-8'));
-      return resolveRefsSync(fragment, schemasDir);
-    } catch {
-      return { type: 'object' };
+  // If this node has a $ref, resolve it
+  if (typeof schema['$ref'] === 'string') {
+    const ref = schema['$ref'];
+    let fragmentPath: string | null = null;
+
+    // Handle relative refs: "fragments/governance.json"
+    if (ref.startsWith('fragments/')) {
+      fragmentPath = join(schemasDir, ref);
+    }
+    // Handle absolute refs: "https://deepadata.com/schemas/edm/v0.6.0/fragments/governance.json"
+    else if (ref.startsWith(SCHEMA_BASE_URL) && ref.includes('/fragments/')) {
+      const fragmentName = ref.split('/fragments/')[1];
+      fragmentPath = join(schemasDir, 'fragments', fragmentName);
+    }
+
+    if (fragmentPath) {
+      try {
+        const fragment = JSON.parse(readFileSync(fragmentPath, 'utf-8'));
+        return resolveRefsSync(fragment, schemasDir);
+      } catch {
+        return { type: 'object' };
+      }
     }
   }
 
