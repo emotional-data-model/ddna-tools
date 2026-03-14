@@ -142,7 +142,7 @@ function buildDdnaHeader(edmPayload: EdmPayload, overrides?: Partial<DdnaHeader>
     },
     masking_rules: (governance.masking_rules as string[]) || [],
     audit_chain: [{
-      timestamp: new Date().toISOString(),
+      at: new Date().toISOString(),
       event: 'created',
       agent: 'ddna-tools',
     }],

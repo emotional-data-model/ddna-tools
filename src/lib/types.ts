@@ -17,7 +17,7 @@ export interface RetentionPolicy {
  * Audit chain entry for lifecycle tracking
  */
 export interface AuditEntry {
-  timestamp: string;
+  at: string;
   event: string;
   agent: string;
   details?: Record<string, unknown>;
