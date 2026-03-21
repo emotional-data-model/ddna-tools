@@ -1,6 +1,14 @@
-# ddna-tools
+# deepadata-ddna-tools
 
-Reference implementation for the .ddna signing specification. Creates and verifies W3C Data Integrity Proofs using Ed25519 signatures with JSON Canonicalization Scheme (JCS).
+The sealing layer for EDM episodic memory records.
+
+An EDM artifact encodes what mattered at capture time. Sealing it creates a cryptographically verifiable, portable record — signed with Ed25519, canonicalised with JCS, portable across any platform that can verify W3C Data Integrity Proofs.
+
+## Why seal?
+
+An unsealed artifact is a local record. A sealed .ddna envelope is a governed episodic memory record — portable, auditable, and independently verifiable by any third party without contacting DeepaData.
+
+The seal is what makes EDM artifacts trustworthy across platform boundaries.
 
 All operations run locally. No external API required.
 
@@ -273,6 +281,22 @@ npm run build
 
 # Run tests
 npm test
+```
+
+## In the EDM stack
+
+```
+Raw text
+↓
+extractFromContent() — deepadata-edm-sdk
+↓
+EDM artifact (significance encoded)
+↓
+seal() — ddna-tools        ← you are here
+↓
+.ddna envelope (portable, verifiable)
+↓
+DeepaData registry (certified, addressable)
 ```
 
 ## License
