@@ -30,7 +30,7 @@ npx ddna-tools <command>
 # Generate a key pair
 ddna keygen --output mykey
 
-# Validate an EDM artifact against v0.6.0 schema
+# Validate an EDM artifact against v0.7.0 schema
 ddna validate artifact.edm.json
 
 # Seal an EDM artifact (local signing)
@@ -113,7 +113,7 @@ ddna inspect [options] <input>
 
 ### `ddna validate`
 
-Validate an EDM artifact against the v0.6.0 schema.
+Validate an EDM artifact against the v0.7.0 schema.
 
 ```bash
 ddna validate [options] <input>
@@ -126,7 +126,7 @@ ddna validate [options] <input>
 ```bash
 ddna validate artifact.edm.json
 # VALID - Schema validation passed
-#   Schema Version: 0.6.0
+#   Schema Version: 0.7.0
 ```
 
 ### `ddna redact`
@@ -249,7 +249,7 @@ A `.ddna` envelope contains three components:
   "ddna_header": {
     "ddna_version": "1.1",
     "created_at": "2026-01-15T10:00:00Z",
-    "edm_version": "0.6.0",
+    "edm_version": "0.7.0",
     "jurisdiction": "GDPR",
     "exportability": "allowed"
   },
