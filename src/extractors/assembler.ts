@@ -368,11 +368,18 @@ export function assembleProfileArtifact(
     context.provider
   );
 
+  // Post-process constellation: default media_format to source type if null
+  // Schema enum doesn't include null, so we must provide a valid default
+  const constellation = extracted.constellation as Record<string, unknown> | undefined;
+  if (constellation && constellation.media_format === null) {
+    constellation.media_format = sourceType === "mixed" ? "photo_with_story" : sourceType;
+  }
+
   // Build artifact with only profile-specific domains
   const artifact: Record<string, unknown> = {
     meta: filterObjectFields(meta as unknown as Record<string, unknown>, profileFields.meta ?? []),
     core: extracted.core,
-    constellation: extracted.constellation,
+    constellation: constellation,
     governance: filterGovernanceFields(
       governance as unknown as Record<string, unknown>,
       profileFields.governance ?? []
