@@ -1,16 +1,20 @@
-# deepadata-ddna-tools
+# ddna-tools
 
-The sealing layer for EDM episodic memory records.
+Reference implementation for .ddna envelope specification — extraction, sealing, and verification.
 
-An EDM artifact encodes what mattered at capture time. Sealing it creates a cryptographically verifiable, portable record — signed with Ed25519, canonicalised with JCS, portable across any platform that can verify W3C Data Integrity Proofs.
+An EDM artifact encodes what mattered at capture time. This package provides the complete OSS pipeline:
 
-## Why seal?
+1. **Extract** — Transform emotionally rich text into structured EDM artifacts using LLM extraction
+2. **Seal** — Create cryptographically verifiable .ddna envelopes (Ed25519, JCS, W3C Data Integrity Proofs)
+3. **Verify** — Validate signatures and inspect envelope contents
 
-An unsealed artifact is a local record. A sealed .ddna envelope is a governed episodic memory record — portable, auditable, and independently verifiable by any third party without contacting DeepaData.
+## Why use ddna-tools?
 
-The seal is what makes EDM artifacts trustworthy across platform boundaries.
+- **Extract** with your own LLM API key (Anthropic, OpenAI, or Kimi)
+- **Seal** artifacts locally with your own signing keys — no API required
+- **Verify** any .ddna envelope offline — portable trust across platforms
 
-All operations run locally. No external API required.
+Canonical profiles only (essential/extended/full). Partner profiles require DeepaData API per EDM spec §3.7.6.
 
 ## Installation
 
@@ -27,29 +31,76 @@ npx ddna-tools <command>
 ## Quick Start
 
 ```bash
+# Extract from text (requires ANTHROPIC_API_KEY env var)
+echo "I remember dad's workshop, the smell of sawdust..." | ddna extract - -o memory.edm.json
+
+# Or use OpenAI/Kimi
+ddna extract journal.txt --provider openai -o memory.edm.json
+
 # Generate a key pair
 ddna keygen --output mykey
 
-# Validate an EDM artifact against v0.7.0 schema
-ddna validate artifact.edm.json
+# Validate against EDM v0.8.0 schema
+ddna validate memory.edm.json
 
-# Seal an EDM artifact (local signing)
-ddna seal --key mykey.key --did did:key:z6Mk... artifact.edm.json
+# Seal the artifact (local signing)
+ddna seal --key mykey.key --did did:key:z6Mk... memory.edm.json
 
 # Verify the sealed envelope
-ddna verify artifact.ddna
+ddna verify memory.ddna
 
 # Inspect envelope details
-ddna inspect artifact.ddna
+ddna inspect memory.ddna
 
 # Redact for stateless mode
-ddna redact artifact.edm.json -o redacted.json
+ddna redact memory.edm.json -o redacted.json
 
 # Check TTL expiry
-ddna check-ttl artifact.edm.json
+ddna check-ttl memory.edm.json
 ```
 
 ## Commands
+
+### `ddna extract`
+
+Extract EDM artifact from text using LLM (BYOK: Bring Your Own Key).
+
+```bash
+ddna extract [options] <input>
+```
+
+**Arguments:**
+- `<input>` - Path to text file or `-` for stdin
+
+**Options:**
+- `-p, --provider <provider>` - LLM provider: anthropic, openai, kimi (default: anthropic)
+- `-m, --model <model>` - Model to use (provider-specific default if omitted)
+- `--profile <profile>` - EDM profile: essential, extended, full (default: full)
+- `-o, --output <path>` - Output path (default: stdout)
+- `--json` - Output full result with confidence (default: just extracted fields)
+
+**Environment Variables:**
+- `ANTHROPIC_API_KEY` - Required for Anthropic provider
+- `OPENAI_API_KEY` - Required for OpenAI provider
+- `MOONSHOT_API_KEY` or `KIMI_API_KEY` - Required for Kimi provider
+- `OPENROUTER_API_KEY` - Alternative for Kimi via OpenRouter
+
+**Example:**
+```bash
+# Extract with Anthropic Claude (default)
+export ANTHROPIC_API_KEY=sk-ant-...
+ddna extract journal.txt -o memory.edm.json
+
+# Extract with OpenAI GPT-4
+export OPENAI_API_KEY=sk-...
+ddna extract journal.txt --provider openai -o memory.edm.json
+
+# Extract essential profile only (faster, cheaper)
+ddna extract journal.txt --profile essential -o memory.edm.json
+
+# Pipe from stdin
+cat notes.txt | ddna extract - --json
+```
 
 ### `ddna keygen`
 
@@ -167,6 +218,35 @@ ddna check-ttl artifact.edm.json
 ```
 
 ## Library Usage
+
+### Extraction
+
+```typescript
+import {
+  extractWithLlm,
+  createAnthropicClient,
+  extractWithOpenAI,
+  createOpenAIClient,
+  extractWithKimi,
+  createKimiClient,
+} from 'ddna-tools';
+
+// Anthropic Claude extraction
+const anthropic = createAnthropicClient(process.env.ANTHROPIC_API_KEY);
+const result = await extractWithLlm(anthropic, { text: 'I remember...' }, undefined, 'full');
+console.log('Extracted:', result.extracted);
+console.log('Confidence:', result.confidence);
+
+// OpenAI extraction
+const openai = createOpenAIClient(process.env.OPENAI_API_KEY);
+const result2 = await extractWithOpenAI(openai, { text: 'I remember...' }, 'gpt-4o-mini', 0, 'extended');
+
+// Kimi K2 extraction
+const kimi = createKimiClient(process.env.KIMI_API_KEY);
+const result3 = await extractWithKimi(kimi, { text: 'I remember...' }, undefined, 'essential');
+```
+
+### Sealing & Verification
 
 ```typescript
 import {
@@ -288,16 +368,20 @@ npm test
 ```
 Raw text
 ↓
-extractFromContent() — deepadata-edm-sdk
+extractWithLlm() — ddna-tools (BYOK)   ← you are here
 ↓
 EDM artifact (significance encoded)
 ↓
-seal() — ddna-tools        ← you are here
+seal() — ddna-tools                    ← you are here
 ↓
 .ddna envelope (portable, verifiable)
 ↓
 DeepaData registry (certified, addressable)
 ```
+
+**Open vs Commercial:**
+- Extraction, sealing, verification: **Open** (this package)
+- Certification, activation layer: **Commercial** (DeepaData API)
 
 ## License
 
