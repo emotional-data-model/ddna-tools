@@ -47,7 +47,7 @@ export type { RedactionResult, TtlResult } from './stateless.js';
 export { validate, isValid } from './validate.js';
 export type { ValidationResult, ValidationError } from './validate.js';
 
-// EDM profile schema validation (v0.6.0)
+// EDM profile schema validation (v0.8.0)
 // validateEdmSchema (async) fetches from canonical URL with bundled fallback
 // validateEdmSchemaSync uses bundled schemas only (for sync contexts)
 export {
@@ -115,6 +115,28 @@ export {
   PROFILE_REQUIRED_FIELDS,
 } from '../extractors/profile-prompts.js';
 
+// Domain extractors (artifact assembly)
+export {
+  EDM_SCHEMA_VERSION,
+  createMeta,
+  createGovernance,
+  createTelemetry,
+  createSystem,
+  createCrosswalks,
+  detectSourceType,
+} from '../extractors/domain-extractors.js';
+
+// Artifact assembler
+export {
+  ESSENTIAL_PROFILE_FIELDS,
+  EXTENDED_PROFILE_FIELDS,
+  FULL_PROFILE_FIELDS,
+  getProfileFields,
+  getProfileDomains,
+  filterByProfile,
+  assembleProfileArtifact,
+} from '../extractors/assembler.js';
+
 // Extraction types
 export type {
   EdmProfile as ExtractionProfile,
@@ -130,3 +152,15 @@ export type {
   ExtendedExtracted,
   FullExtracted,
 } from '../extractors/types.js';
+
+// Domain types
+export type {
+  Meta,
+  Governance,
+  Telemetry,
+  System,
+  Crosswalks,
+  ExtractionMetadata,
+} from '../extractors/domain-extractors.js';
+
+export type { AssemblyContext } from '../extractors/assembler.js';

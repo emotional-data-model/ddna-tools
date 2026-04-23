@@ -54,3 +54,36 @@ export {
   calculateProfileConfidence,
   PROFILE_REQUIRED_FIELDS,
 } from './profile-prompts.js';
+
+// Domain extractors (artifact assembly)
+export {
+  EDM_SCHEMA_VERSION,
+  createMeta,
+  createGovernance,
+  createTelemetry,
+  createSystem,
+  createCrosswalks,
+  detectSourceType,
+} from './domain-extractors.js';
+
+export type {
+  Meta,
+  Governance,
+  Telemetry,
+  System,
+  Crosswalks,
+  ExtractionMetadata,
+} from './domain-extractors.js';
+
+// Artifact assembler
+export {
+  ESSENTIAL_PROFILE_FIELDS,
+  EXTENDED_PROFILE_FIELDS,
+  FULL_PROFILE_FIELDS,
+  getProfileFields,
+  getProfileDomains,
+  filterByProfile,
+  assembleProfileArtifact,
+} from './assembler.js';
+
+export type { AssemblyContext } from './assembler.js';

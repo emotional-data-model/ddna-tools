@@ -8,7 +8,7 @@
  *    https://deepadata.com/schemas/edm/{version}/edm.{profile}.schema.json
  * 2. Fall back to bundled schemas if fetch fails (offline/network error)
  *
- * Bundled schemas correspond to edm-spec v0.6.0 — update when spec version increments.
+ * Bundled schemas correspond to edm-spec v0.8.0 — update when spec version increments.
  */
 
 import Ajv from 'ajv';
@@ -32,9 +32,9 @@ export type EdmProfile = 'essential' | 'extended' | 'full';
 
 // Schema file mapping (for bundled fallback)
 const SCHEMA_FILES: Record<EdmProfile, string> = {
-  essential: 'edm.v0.6.essential.schema.json',
-  extended: 'edm.v0.6.extended.schema.json',
-  full: 'edm.v0.6.full.schema.json',
+  essential: 'edm.v0.8.essential.schema.json',
+  extended: 'edm.v0.8.extended.schema.json',
+  full: 'edm.v0.8.full.schema.json',
 };
 
 // Validation result

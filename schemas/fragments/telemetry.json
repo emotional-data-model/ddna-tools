@@ -36,13 +36,6 @@
         "string",
         "null"
       ]
-    },
-    "alignment_delta": {
-      "description": "Deviation between encoded affective state and response coherence (-1.0 to +1.0)",
-      "type": [
-        "number",
-        "null"
-      ]
     }
   },
   "additionalProperties": false,

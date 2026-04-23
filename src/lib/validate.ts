@@ -1,6 +1,6 @@
 /**
  * Schema Validation for EDM Artifacts
- * Validates artifacts against EDM v0.5.1 JSON schema
+ * Validates artifacts against EDM v0.8.0 JSON schema
  *
  * FREE: Does not require a DeepaData API key.
  */
@@ -34,7 +34,7 @@ export interface ValidationResult {
 /**
  * Schema version this validator supports
  */
-const SCHEMA_VERSION = '0.5.1';
+const SCHEMA_VERSION = '0.8.0';
 
 /**
  * Required domains in an EDM artifact
@@ -70,9 +70,9 @@ const CONSTELLATION_ENUMS = {
   emotion_primary: [
     'joy', 'sadness', 'fear', 'anger', 'wonder', 'peace',
     'tenderness', 'reverence', 'pride', 'anxiety', 'gratitude',
-    'longing', 'hope', 'shame',
+    'longing', 'hope', 'shame', 'disappointment', 'relief', 'frustration',
   ],
-  narrative_arc: ['overcoming', 'transformation', 'connection', 'reflection', 'closure'],
+  narrative_arc: ['overcoming', 'transformation', 'connection', 'reflection', 'closure', 'loss', 'confrontation'],
   relational_dynamics: [
     'parent_child', 'grandparent_grandchild', 'romantic_partnership', 'couple',
     'sibling_bond', 'family', 'friendship', 'friend', 'companionship', 'colleague',
@@ -136,7 +136,7 @@ const MILKY_WAY_ENUMS = {
 } as const;
 
 /**
- * Validate an EDM artifact against the v0.5.1 schema
+ * Validate an EDM artifact against the v0.8.0 schema
  *
  * FREE: Does not require a DeepaData API key.
  *
@@ -204,12 +204,15 @@ export function validate(artifact: unknown): ValidationResult {
     }
 
     // Validate version format
+    // TODO(ADR-0021): Per whitepaper §11.4, declared version should govern
+    // interpretation. Current implementation validates all versions against
+    // v0.8.0 schema. Proper version-routed validation deferred to ADR-0021.
     if (meta.version && typeof meta.version === 'string') {
-      if (!/^0\.[4-9]\.[0-9]+$/.test(meta.version)) {
+      if (!/^0\.[7-8]\.[0-9]+$/.test(meta.version)) {
         errors.push({
           path: 'meta.version',
           message: 'Invalid EDM version format',
-          expected: '0.5.x or 0.4.x',
+          expected: '0.7.x or 0.8.x',
           actual: meta.version,
         });
       }

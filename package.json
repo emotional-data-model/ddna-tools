@@ -6,7 +6,7 @@
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
   "bin": {
-    "ddna": "./dist/cli.js"
+    "ddna": "dist/cli.js"
   },
   "exports": {
     ".": {

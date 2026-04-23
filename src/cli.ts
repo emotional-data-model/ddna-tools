@@ -45,6 +45,7 @@ import {
   createKimiClient,
   getKimiModelId,
 } from './extractors/kimi-extractor.js';
+import { assembleProfileArtifact } from './extractors/assembler.js';
 import type { EdmProfile } from './extractors/types.js';
 
 // Get package version
@@ -300,7 +301,7 @@ program
 
 program
   .command('validate')
-  .description('Validate an EDM artifact against v0.6.0 schema')
+  .description('Validate an EDM artifact against v0.8.0 schema')
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('--json', 'Output as JSON')
   .action((input: string, options) => {
@@ -484,15 +485,35 @@ program
         throw new Error(`Unknown provider: ${options.provider}. Must be anthropic, openai, or kimi.`);
       }
 
+      // Assemble complete EDM artifact with meta, governance, telemetry domains
+      const artifact = assembleProfileArtifact(
+        result.extracted as unknown as Record<string, unknown>,
+        {
+          consentBasis: 'consent',
+          visibility: 'private',
+          piiTier: 'moderate',
+        },
+        {
+          confidence: result.confidence,
+          model: result.model,
+          profile: result.profile,
+          provider: provider as 'anthropic' | 'openai' | 'kimi',
+          notes: result.notes,
+          hasText: true,
+          hasImage: false,
+        }
+      );
+
       // Format output
       const output = options.json
-        ? JSON.stringify(result, null, 2)
-        : JSON.stringify(result.extracted, null, 2);
+        ? JSON.stringify({ artifact, extraction: result }, null, 2)
+        : JSON.stringify(artifact, null, 2);
 
       if (options.output) {
         fs.writeFileSync(options.output, output);
-        console.log(chalk.green('✓') + ' Extracted artifact written to: ' + chalk.cyan(options.output));
+        console.log(chalk.green('✓') + ' EDM artifact written to: ' + chalk.cyan(options.output));
         console.log('  Profile: ' + chalk.dim(result.profile));
+        console.log('  Schema: ' + chalk.dim('v0.8.0'));
         console.log('  Model: ' + chalk.dim(result.model));
         console.log('  Confidence: ' + chalk.yellow(result.confidence.toFixed(2)));
       } else {
