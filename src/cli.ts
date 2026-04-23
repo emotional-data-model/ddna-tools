@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * ddna - Command line interface for .ddna signing tools
+ * ddna - Command line interface for .ddna envelope tools
  *
  * Commands:
+ *   extract   - Extract EDM artifact from text (BYOK: requires API key)
  *   keygen    - Generate Ed25519 key pair
  *   seal      - Seal an EDM artifact into a .ddna envelope (local signing)
  *   verify    - Verify a .ddna envelope signature
@@ -11,7 +12,9 @@
  *   redact    - Redact sensitive fields for stateless mode
  *   check-ttl - Check if artifact has expired (24h TTL)
  *
- * All commands run locally. No external API required.
+ * All commands run locally except extract (requires LLM API key).
+ * Canonical profiles only (essential/extended/full).
+ * Partner profiles require DeepaData API per EDM spec §3.7.6.
  */
 
 import { Command } from 'commander';
@@ -27,6 +30,22 @@ import { keygen, keyToHex, hexToKey } from './lib/keygen.js';
 import { redact, isExpired } from './lib/stateless.js';
 import { validate } from './lib/validate.js';
 import type { EdmPayload } from './lib/types.js';
+
+// Extraction imports
+import {
+  extractWithLlm,
+  createAnthropicClient,
+} from './extractors/llm-extractor.js';
+import {
+  extractWithOpenAI,
+  createOpenAIClient,
+} from './extractors/openai-extractor.js';
+import {
+  extractWithKimi,
+  createKimiClient,
+  getKimiModelId,
+} from './extractors/kimi-extractor.js';
+import type { EdmProfile } from './extractors/types.js';
 
 // Get package version
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -399,6 +418,85 @@ program
         if (result.expired) {
           process.exit(1);
         }
+      }
+    } catch (error) {
+      console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+// ============================================================================
+// EXTRACT COMMAND (BYOK - requires LLM API key)
+// ============================================================================
+
+program
+  .command('extract')
+  .description('Extract EDM artifact from text using LLM (BYOK: requires API key)')
+  .argument('<input>', 'Path to text file or "-" for stdin')
+  .option('-p, --provider <provider>', 'LLM provider: anthropic, openai, kimi (default: anthropic)', 'anthropic')
+  .option('-m, --model <model>', 'Model to use (provider-specific default if omitted)')
+  .option('--profile <profile>', 'EDM profile: essential, extended, full (default: full)', 'full')
+  .option('-o, --output <path>', 'Output path (default: stdout)')
+  .option('--json', 'Output full result with confidence (default: just extracted fields)')
+  .action(async (input: string, options) => {
+    try {
+      // Read input text
+      let text: string;
+      if (input === '-') {
+        // Read from stdin
+        const chunks: Buffer[] = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk as Buffer);
+        }
+        text = Buffer.concat(chunks).toString('utf-8');
+      } else {
+        const absolutePath = path.resolve(input);
+        if (!fs.existsSync(absolutePath)) {
+          throw new Error(`File not found: ${input}`);
+        }
+        text = fs.readFileSync(absolutePath, 'utf-8');
+      }
+
+      if (!text.trim()) {
+        throw new Error('Input text is empty');
+      }
+
+      const profile = options.profile as EdmProfile;
+      if (!['essential', 'extended', 'full'].includes(profile)) {
+        throw new Error(`Invalid profile: ${options.profile}. Must be essential, extended, or full.`);
+      }
+
+      // Extract based on provider
+      let result;
+      const provider = options.provider.toLowerCase();
+
+      if (provider === 'anthropic') {
+        const client = createAnthropicClient();
+        result = await extractWithLlm(client, { text }, options.model, profile);
+      } else if (provider === 'openai') {
+        const client = createOpenAIClient();
+        result = await extractWithOpenAI(client, { text }, options.model, 0, profile);
+      } else if (provider === 'kimi') {
+        const client = createKimiClient();
+        const model = options.model ?? getKimiModelId();
+        result = await extractWithKimi(client, { text }, model, profile);
+      } else {
+        throw new Error(`Unknown provider: ${options.provider}. Must be anthropic, openai, or kimi.`);
+      }
+
+      // Format output
+      const output = options.json
+        ? JSON.stringify(result, null, 2)
+        : JSON.stringify(result.extracted, null, 2);
+
+      if (options.output) {
+        fs.writeFileSync(options.output, output);
+        console.log(chalk.green('✓') + ' Extracted artifact written to: ' + chalk.cyan(options.output));
+        console.log('  Profile: ' + chalk.dim(result.profile));
+        console.log('  Model: ' + chalk.dim(result.model));
+        console.log('  Confidence: ' + chalk.yellow(result.confidence.toFixed(2)));
+      } else {
+        console.log(output);
       }
     } catch (error) {
       console.error(chalk.red('Error:'), error instanceof Error ? error.message : error);
