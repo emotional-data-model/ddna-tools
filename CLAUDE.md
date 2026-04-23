@@ -89,11 +89,22 @@ If asked to add partner profile support, stop and reference ADR-0017 and spec §
 
 ## Schema Synchronisation
 
-Bundled schemas in `schemas/` are copies of canonical `edm-spec` schemas.
-Do not modify bundled schemas without a corresponding upstream change in edm-spec.
-Per session 2026-04-23: local schema fork was flagged and reverted.
+Bundled schemas in `schemas/` are a read-only mirror of canonical `emotional-data-model/edm-spec` at the SHA pinned in `schemas/.edm-spec-version`. Per session 2026-04-23, a local schema fork was flagged and reverted; the rule is now enforced mechanically.
 
-Enum values are derived from bundled schemas at module init (validate.ts refactor b1cfefa).
+**Updating bundled schemas:**
+1. Land the change upstream in edm-spec.
+2. Bump the SHA in `schemas/.edm-spec-version`.
+3. Run `npx tsx scripts/sync-schemas.ts`.
+4. Commit the resulting diff.
+
+**Drift enforcement:**
+CI workflow `.github/workflows/schema-sync-check.yml` runs on every pull request and push to main. It re-runs `scripts/sync-schemas.ts` into a temp dir and diffs against bundled. A non-empty diff fails the job — PRs cannot merge with drifted schemas.
+
+**Filter:** `sync-schemas.ts` copies root schemas matching `edm.v0.8.*` plus all fragments. Bump `ROOT_SCHEMA_PREFIX` in the script when the package targets a new EDM major.minor.
+
+Enum values are derived from bundled schemas at module init (`src/lib/validate.ts:45-105`, commit `b1cfefa`). The sync feeds those schemas; it does not replace the derivation pattern.
+
+Design: `deepadata-com/planning/SCHEMA_SYNC_PROCESS_2026-04-24.md`. edm-sdk Zod synchronisation is deferred per that document §5 pending generator evaluation.
 
 ## Standards Implemented
 

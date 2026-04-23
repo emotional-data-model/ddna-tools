@@ -1,0 +1,41 @@
+name: schema-sync-check
+
+on:
+  pull_request:
+    paths:
+      - 'schemas/**'
+      - 'scripts/sync-schemas.ts'
+      - '.github/workflows/schema-sync-check.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'schemas/**'
+      - 'scripts/sync-schemas.ts'
+      - '.github/workflows/schema-sync-check.yml'
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ddna-tools
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sync-schemas into temp dir
+        run: npx tsx scripts/sync-schemas.ts "$RUNNER_TEMP/schemas-synced"
+
+      - name: Diff synced output against bundled schemas
+        run: |
+          if diff -r --exclude='.edm-spec-version' "$RUNNER_TEMP/schemas-synced" schemas; then
+            echo "Bundled schemas are in sync with canonical edm-spec at pinned SHA."
+          else
+            echo "::error::Bundled schemas drift from canonical edm-spec. Run scripts/sync-schemas.ts and commit the result."
+            exit 1
+          fi
