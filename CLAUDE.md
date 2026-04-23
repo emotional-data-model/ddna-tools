@@ -1,44 +1,99 @@
 # ddna-tools
 
-CLI for sealing, verifying, and inspecting .ddna envelopes.
+CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts as .ddna envelopes.
+
+**Last session:** 2026-04-23 — v0.3.0 published to npm (ADR-0023 open extraction migration)
 
 ## What This Repo Is
 
-The open-source command-line toolkit for working with .ddna
-envelopes — the signed artifact format that wraps EDM data.
-Self-sealing is free. This repo enables local cryptographic
-operations without touching the DeepaData platform.
-
-- **Current version:** v0.2.0
+- **Current version:** v0.3.0
 - **License:** MIT (open source)
 - **npm:** `ddna-tools`
 - **Remote:** github.com/emotional-data-model/ddna-tools
 
+The reference implementation for the complete EDM artifact pipeline:
+
+1. **Extract** — Transform text into structured EDM artifacts using LLM (BYOK: Anthropic, OpenAI, Kimi)
+2. **Validate** — Check artifact against bundled v0.8.0 schema
+3. **Seal** — Create cryptographically signed .ddna envelope (Ed25519, JCS, W3C Data Integrity)
+4. **Verify** — Validate envelope signature offline
+5. **Inspect** — Display envelope contents
+
+Canonical profiles only (essential/extended/full). Partner profiles (`partner:` prefix) are registry-gated at deepadata.com per spec §3.7.6 and not implemented here by design — see ADR-0023.
+
 ## Role in the DeepaData System
 
 ```
-   edm-sdk (produces EDM artifacts)
-       ↓
-→ ddna-tools (seal, verify, inspect) ← YOU ARE HERE
-       ↓ self-sealed envelopes or
-   deepadata-com (CA-issued seals with registry entry)
+raw text + LLM API key
+    ↓
+ddna extract (LLM extraction + domain assembly)
+    ↓
+.edm.json artifact
+    ↓
+ddna validate (schema check against bundled v0.8.0)
+    ↓
+ddna seal (Ed25519 local signing)
+    ↓
+.ddna envelope
+    ↓
+ddna verify (offline signature check)
 ```
 
 Self-sealing via ddna-tools is free and requires no API key.
-DeepaData-issued seals (via /api/v1/issue) add a registry
-entry: discoverable, revocable, verifiable by third parties.
+DeepaData-issued seals (via /api/v1/issue) add a registry entry: discoverable, revocable, verifiable by third parties.
 
 ## CLI Commands
 
-- `ddna seal` — Seal EDM artifact into signed .ddna envelope
-- `ddna verify` — Validate envelope signature using did:key
-- `ddna inspect` — Display envelope contents (human/JSON)
-- `ddna keygen` — Generate Ed25519 key pairs with DID identifiers
+| Command | Description |
+|---------|-------------|
+| `ddna extract` | Extract EDM artifact from text using LLM (BYOK: requires API key) |
+| `ddna validate` | Validate EDM artifact against v0.8.0 schema |
+| `ddna seal` | Seal artifact into .ddna envelope (local Ed25519 signing) |
+| `ddna verify` | Verify .ddna envelope signature |
+| `ddna inspect` | Display envelope contents (human/JSON) |
+| `ddna keygen` | Generate Ed25519 key pair with DID identifier |
+| `ddna redact` | Redact sensitive fields for stateless mode |
+| `ddna check-ttl` | Check if artifact has expired (default 24h TTL) |
 
 ## Library API
 
-- `seal()`, `verify()`, `inspect()`, `keygen()`
-- `hexToKey()`, `keyToHex()` — key format conversion
+**Sealing & Verification:**
+- `seal()`, `sealSync()` — create .ddna envelope
+- `verify()`, `verifySync()` — verify envelope signature
+- `inspect()`, `inspectJson()` — read envelope contents
+- `keygen()` — generate Ed25519 key pair
+- `validate()`, `isValid()` — schema validation
+- `validateEdmSchema()`, `validateEdmSchemaSync()` — profile-aware validation
+- `redact()` — stateless mode
+- `isExpired()` — TTL check
+
+**Extraction (v0.3.0):**
+- `extractWithLlm()`, `createAnthropicClient()` — Anthropic Claude
+- `extractWithOpenAI()`, `createOpenAIClient()` — OpenAI GPT
+- `extractWithKimi()`, `createKimiClient()` — Kimi K2
+
+**Domain Factories:**
+- `createMeta()`, `createGovernance()`, `createTelemetry()`, `createSystem()`, `createCrosswalks()`
+
+**Assembler:**
+- `assembleProfileArtifact()` — assemble complete EDM artifact from extracted fields
+
+## Hard Constraints
+
+| Constraint | Reason |
+|---|---|
+| Do not implement partner profile extraction | Partner profiles are registry-gated per spec §3.7.6; canonical profiles only in OSS |
+| Do not modify bundled schemas without upstream change | Bundled schemas in schemas/ are copies of canonical edm-spec; sync required |
+
+If asked to add partner profile support, stop and reference ADR-0017 and spec §3.7.6.
+
+## Schema Synchronisation
+
+Bundled schemas in `schemas/` are copies of canonical `edm-spec` schemas.
+Do not modify bundled schemas without a corresponding upstream change in edm-spec.
+Per session 2026-04-23: local schema fork was flagged and reverted.
+
+Enum values are derived from bundled schemas at module init (validate.ts refactor b1cfefa).
 
 ## Standards Implemented
 
@@ -47,12 +102,8 @@ entry: discoverable, revocable, verifiable by third parties.
 - RFC 8032 Ed25519 signatures
 - did:key method for verification
 
-## OSS Boundary
-
-This repo is MIT licensed. It implements the signing mechanics
-but does NOT write to any registry. Registry writes require
-the DeepaData platform API.
-
 ## Source of Truth
 
 → **See `deepadata-com/planning/CLAUDE_PROJECT.md`**
+
+The platform repo (deepadata-com) is the source of truth for session state, version alignment, and task tracking.
