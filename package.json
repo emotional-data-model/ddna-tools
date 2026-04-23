@@ -1,7 +1,7 @@
 {
   "name": "ddna-tools",
-  "version": "0.2.0",
-  "description": "Reference implementation for .ddna signing specification - W3C Data Integrity Proofs with Ed25519",
+  "version": "0.3.0",
+  "description": "Reference implementation for .ddna envelope specification - extraction, sealing, and verification with W3C Data Integrity Proofs",
   "type": "module",
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
@@ -27,12 +27,14 @@
     "test:run": "vitest run",
     "lint": "tsc --noEmit",
     "prepare": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run test:run && npm run build"
   },
   "keywords": [
     "ddna",
     "deepadata",
     "edm",
+    "extraction",
+    "emotional-data-model",
     "signing",
     "ed25519",
     "data-integrity",
@@ -54,6 +56,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
     "@noble/ed25519": "^2.1.0",
     "@noble/hashes": "^1.6.0",
     "ajv": "^8.18.0",
@@ -61,7 +64,8 @@
     "canonicalize": "^2.0.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
-    "multiformats": "^13.3.0"
+    "multiformats": "^13.3.0",
+    "openai": "^6.17.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
