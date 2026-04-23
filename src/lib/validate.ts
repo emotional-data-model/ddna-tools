@@ -2,8 +2,111 @@
  * Schema Validation for EDM Artifacts
  * Validates artifacts against EDM v0.8.0 JSON schema
  *
+ * Enum values are derived from bundled schema fragments at module load.
+ * This ensures single source of truth: schemas/fragments/*.json
+ *
  * FREE: Does not require a DeepaData API key.
  */
+
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// =============================================================================
+// Schema Loading
+// =============================================================================
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const SCHEMAS_DIR = join(__dirname, '../../schemas/fragments');
+
+interface SchemaProperty {
+  enum?: (string | null)[];
+  type?: string | string[];
+  properties?: Record<string, SchemaProperty>;
+}
+
+interface SchemaFragment {
+  properties?: Record<string, SchemaProperty>;
+}
+
+function loadFragment(name: string): SchemaFragment {
+  const path = join(SCHEMAS_DIR, `${name}.json`);
+  return JSON.parse(readFileSync(path, 'utf-8'));
+}
+
+/**
+ * Extract enum values from a schema property, filtering out null
+ */
+function extractEnum(prop: SchemaProperty | undefined): string[] | null {
+  if (!prop || !prop.enum) return null;
+  return prop.enum.filter((v): v is string => v !== null);
+}
+
+// Load schema fragments at module init
+const metaSchema = loadFragment('meta');
+const constellationSchema = loadFragment('constellation');
+const gravitySchema = loadFragment('gravity');
+const impulseSchema = loadFragment('impulse');
+const governanceSchema = loadFragment('governance');
+const milkyWaySchema = loadFragment('milky_way');
+
+// =============================================================================
+// Derived Enum Values (single source of truth: schema fragments)
+// =============================================================================
+
+const META_ENUMS: Record<string, string[] | null> = {
+  visibility: extractEnum(metaSchema.properties?.visibility),
+  pii_tier: extractEnum(metaSchema.properties?.pii_tier),
+  source_type: extractEnum(metaSchema.properties?.source_type),
+  consent_basis: extractEnum(metaSchema.properties?.consent_basis),
+};
+
+const CONSTELLATION_ENUMS: Record<string, string[] | null> = {
+  temporal_context: extractEnum(constellationSchema.properties?.temporal_context),
+  memory_type: extractEnum(constellationSchema.properties?.memory_type),
+  media_format: extractEnum(constellationSchema.properties?.media_format),
+  narrative_archetype: extractEnum(constellationSchema.properties?.narrative_archetype),
+  relational_perspective: extractEnum(constellationSchema.properties?.relational_perspective),
+  temporal_rhythm: extractEnum(constellationSchema.properties?.temporal_rhythm),
+  // These fields use x_constraints (free text with canonical suggestions), not strict enums
+  // emotion_primary, narrative_arc, relational_dynamics: null (skip enum check)
+};
+
+const GRAVITY_ENUMS: Record<string, string[] | null> = {
+  emotional_density: extractEnum(gravitySchema.properties?.emotional_density),
+  valence: extractEnum(gravitySchema.properties?.valence),
+  viscosity: extractEnum(gravitySchema.properties?.viscosity),
+  temporal_decay: extractEnum(gravitySchema.properties?.temporal_decay),
+  adaptation_trajectory: extractEnum(gravitySchema.properties?.adaptation_trajectory),
+  // tether_type, recurrence_pattern: free text with canonical suggestions
+};
+
+const IMPULSE_ENUMS: Record<string, string[] | null> = {
+  drive_state: extractEnum(impulseSchema.properties?.drive_state),
+  motivational_orientation: extractEnum(impulseSchema.properties?.motivational_orientation),
+  temporal_focus: extractEnum(impulseSchema.properties?.temporal_focus),
+  directionality: extractEnum(impulseSchema.properties?.directionality),
+  social_visibility: extractEnum(impulseSchema.properties?.social_visibility),
+  urgency: extractEnum(impulseSchema.properties?.urgency),
+  risk_posture: extractEnum(impulseSchema.properties?.risk_posture),
+  agency_level: extractEnum(impulseSchema.properties?.agency_level),
+  regulation_state: extractEnum(impulseSchema.properties?.regulation_state),
+  attachment_style: extractEnum(impulseSchema.properties?.attachment_style),
+  // coping_style: free text with canonical suggestions
+};
+
+const GOVERNANCE_ENUMS: Record<string, string[] | null> = {
+  jurisdiction: extractEnum(governanceSchema.properties?.jurisdiction),
+  exportability: extractEnum(governanceSchema.properties?.exportability),
+};
+
+const MILKY_WAY_ENUMS: Record<string, string[] | null> = {
+  visibility_context: extractEnum(milkyWaySchema.properties?.visibility_context),
+};
+
+// =============================================================================
+// Types
+// =============================================================================
 
 /**
  * Validation error detail
@@ -31,10 +134,21 @@ export interface ValidationResult {
   schemaVersion: string;
 }
 
+// =============================================================================
+// Constants
+// =============================================================================
+
 /**
  * Schema version this validator supports
  */
 const SCHEMA_VERSION = '0.8.0';
+
+/**
+ * Accepted version pattern
+ * TODO(ADR-0021): Replace pattern matching with version-routed schema selection
+ */
+const ACCEPTED_VERSION_PATTERN = /^0\.[3-9]\.[0-9]+$/;
+const ACCEPTED_VERSION_RANGE = '0.3.x through 0.9.x';
 
 /**
  * Required domains in an EDM artifact
@@ -53,87 +167,32 @@ const META_REQUIRED_FIELDS = [
   'consent_basis',
 ] as const;
 
-/**
- * Valid enum values for meta fields
- */
-const META_ENUMS = {
-  visibility: ['private', 'shared', 'public'],
-  pii_tier: ['none', 'low', 'moderate', 'high', 'extreme'],
-  source_type: ['text', 'audio', 'image', 'video', 'mixed'],
-  consent_basis: ['consent', 'contract', 'legitimate_interest', 'none'],
-} as const;
+// =============================================================================
+// Validation
+// =============================================================================
 
 /**
- * Valid enum values for constellation fields
+ * Validate enum field against schema-derived values
  */
-const CONSTELLATION_ENUMS = {
-  emotion_primary: [
-    'joy', 'sadness', 'fear', 'anger', 'wonder', 'peace',
-    'tenderness', 'reverence', 'pride', 'anxiety', 'gratitude',
-    'longing', 'hope', 'shame', 'disappointment', 'relief', 'frustration',
-  ],
-  narrative_arc: ['overcoming', 'transformation', 'connection', 'reflection', 'closure', 'loss', 'confrontation'],
-  relational_dynamics: [
-    'parent_child', 'grandparent_grandchild', 'romantic_partnership', 'couple',
-    'sibling_bond', 'family', 'friendship', 'friend', 'companionship', 'colleague',
-    'mentorship', 'reunion', 'community_ritual', 'grief', 'self_reflection',
-    'professional', 'therapeutic', 'service', 'adversarial',
-  ],
-  temporal_context: ['childhood', 'early_adulthood', 'midlife', 'late_life', 'recent', 'future', 'timeless'],
-  memory_type: ['legacy_artifact', 'fleeting_moment', 'milestone', 'reflection', 'formative_experience'],
-  media_format: ['photo', 'video', 'audio', 'text', 'photo_with_story'],
-  narrative_archetype: [
-    'hero', 'caregiver', 'seeker', 'sage', 'lover', 'outlaw',
-    'innocent', 'orphan', 'magician', 'creator', 'everyman', 'jester', 'ruler', 'mentor',
-  ],
-  relational_perspective: ['self', 'partner', 'family', 'friends', 'community', 'humanity'],
-  temporal_rhythm: ['still', 'sudden', 'rising', 'fading', 'recurring', 'spiraling', 'dragging', 'suspended', 'looping', 'cyclic'],
-} as const;
+function validateEnumField(
+  domain: Record<string, unknown>,
+  field: string,
+  validValues: string[] | null,
+  domainPath: string,
+  errors: ValidationError[]
+): void {
+  if (!validValues) return; // No enum constraint (free text)
 
-/**
- * Valid enum values for gravity fields
- */
-const GRAVITY_ENUMS = {
-  emotional_density: ['low', 'medium', 'high'],
-  valence: ['positive', 'negative', 'mixed'],
-  viscosity: ['low', 'medium', 'high', 'enduring', 'fluid'],
-  tether_type: ['person', 'symbol', 'event', 'place', 'ritual', 'object', 'tradition', 'identity', 'self'],
-  recurrence_pattern: ['cyclical', 'isolated', 'chronic', 'emerging'],
-  temporal_decay: ['fast', 'moderate', 'slow'],
-  adaptation_trajectory: ['improving', 'stable', 'declining', 'integrative', 'emerging'],
-} as const;
-
-/**
- * Valid enum values for impulse fields
- */
-const IMPULSE_ENUMS = {
-  drive_state: ['explore', 'approach', 'avoid', 'repair', 'persevere', 'share', 'confront', 'protect', 'process'],
-  motivational_orientation: ['belonging', 'safety', 'mastery', 'meaning', 'autonomy', 'authenticity'],
-  temporal_focus: ['past', 'present', 'future'],
-  directionality: ['inward', 'outward', 'transcendent'],
-  social_visibility: ['private', 'relational', 'collective'],
-  urgency: ['calm', 'elevated', 'pressing', 'acute'],
-  risk_posture: ['cautious', 'balanced', 'bold'],
-  agency_level: ['low', 'medium', 'high'],
-  regulation_state: ['regulated', 'wavering', 'dysregulated'],
-  attachment_style: ['secure', 'anxious', 'avoidant', 'disorganized'],
-  coping_style: ['reframe_meaning', 'seek_support', 'distract', 'ritualize', 'confront', 'detach', 'process'],
-} as const;
-
-/**
- * Valid enum values for governance fields
- */
-const GOVERNANCE_ENUMS = {
-  jurisdiction: ['GDPR', 'CCPA', 'HIPAA', 'PIPEDA', 'LGPD', 'None', 'Mixed'],
-  exportability: ['allowed', 'restricted', 'forbidden'],
-} as const;
-
-/**
- * Valid enum values for milky_way fields
- */
-const MILKY_WAY_ENUMS = {
-  visibility_context: ['private', 'family_only', 'shared_publicly'],
-} as const;
+  const value = domain[field];
+  if (value !== null && value !== undefined && !validValues.includes(value as string)) {
+    errors.push({
+      path: `${domainPath}.${field}`,
+      message: `Invalid value for '${domainPath}.${field}'`,
+      expected: validValues.join(' | '),
+      actual: String(value),
+    });
+  }
+}
 
 /**
  * Validate an EDM artifact against the v0.8.0 schema
@@ -190,29 +249,19 @@ export function validate(artifact: unknown): ValidationResult {
       }
     }
 
-    // Validate enum fields
+    // Validate enum fields from schema
     for (const [field, validValues] of Object.entries(META_ENUMS)) {
-      const value = meta[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `meta.${field}`,
-          message: `Invalid value for 'meta.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(meta, field, validValues, 'meta', errors);
     }
 
     // Validate version format
-    // TODO(ADR-0021): Per whitepaper §11.4, declared version should govern
-    // interpretation. Current implementation validates all versions against
-    // v0.8.0 schema. Proper version-routed validation deferred to ADR-0021.
+    // TODO(ADR-0021): Replace pattern matching with version-routed schema selection
     if (meta.version && typeof meta.version === 'string') {
-      if (!/^0\.[7-8]\.[0-9]+$/.test(meta.version)) {
+      if (!ACCEPTED_VERSION_PATTERN.test(meta.version)) {
         errors.push({
           path: 'meta.version',
           message: 'Invalid EDM version format',
-          expected: '0.7.x or 0.8.x',
+          expected: ACCEPTED_VERSION_RANGE,
           actual: meta.version,
         });
       }
@@ -250,16 +299,9 @@ export function validate(artifact: unknown): ValidationResult {
   // Validate constellation enum fields
   if (obj.constellation && typeof obj.constellation === 'object') {
     const constellation = obj.constellation as Record<string, unknown>;
+
     for (const [field, validValues] of Object.entries(CONSTELLATION_ENUMS)) {
-      const value = constellation[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `constellation.${field}`,
-          message: `Invalid value for 'constellation.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(constellation, field, validValues, 'constellation', errors);
     }
 
     // Validate transformational_pivot is boolean
@@ -290,16 +332,9 @@ export function validate(artifact: unknown): ValidationResult {
   // Validate gravity enum fields and numeric ranges
   if (obj.gravity && typeof obj.gravity === 'object') {
     const gravity = obj.gravity as Record<string, unknown>;
+
     for (const [field, validValues] of Object.entries(GRAVITY_ENUMS)) {
-      const value = gravity[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `gravity.${field}`,
-          message: `Invalid value for 'gravity.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(gravity, field, validValues, 'gravity', errors);
     }
 
     // Validate numeric fields (0.0 - 1.0)
@@ -322,48 +357,27 @@ export function validate(artifact: unknown): ValidationResult {
   // Validate impulse enum fields
   if (obj.impulse && typeof obj.impulse === 'object') {
     const impulse = obj.impulse as Record<string, unknown>;
+
     for (const [field, validValues] of Object.entries(IMPULSE_ENUMS)) {
-      const value = impulse[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `impulse.${field}`,
-          message: `Invalid value for 'impulse.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(impulse, field, validValues, 'impulse', errors);
     }
   }
 
   // Validate governance enum fields
   if (obj.governance && typeof obj.governance === 'object') {
     const governance = obj.governance as Record<string, unknown>;
+
     for (const [field, validValues] of Object.entries(GOVERNANCE_ENUMS)) {
-      const value = governance[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `governance.${field}`,
-          message: `Invalid value for 'governance.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(governance, field, validValues, 'governance', errors);
     }
   }
 
   // Validate milky_way enum fields
   if (obj.milky_way && typeof obj.milky_way === 'object') {
     const milkyWay = obj.milky_way as Record<string, unknown>;
+
     for (const [field, validValues] of Object.entries(MILKY_WAY_ENUMS)) {
-      const value = milkyWay[field];
-      if (value !== null && value !== undefined && !validValues.includes(value as never)) {
-        errors.push({
-          path: `milky_way.${field}`,
-          message: `Invalid value for 'milky_way.${field}'`,
-          expected: validValues.join(' | '),
-          actual: String(value),
-        });
-      }
+      validateEnumField(milkyWay, field, validValues, 'milky_way', errors);
     }
 
     // Validate associated_people is array
