@@ -31,7 +31,7 @@ export interface DdnaHeader {
   created_at: string;
   edm_version: string;
   owner_user_id: string | null;
-  exportability: 'allowed' | 'restricted' | 'prohibited';
+  exportability: 'allowed' | 'restricted' | 'forbidden';
   jurisdiction: string;
   payload_type: string;
   consent_basis: string;

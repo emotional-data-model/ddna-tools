@@ -37,7 +37,7 @@ export interface Meta {
 }
 
 export interface Governance {
-  jurisdiction: "GDPR" | "CCPA" | "LGPD" | "HIPAA" | "APPI" | null;
+  jurisdiction: "GDPR" | "CCPA" | "HIPAA" | "PIPEDA" | "LGPD" | "None" | "Mixed" | null;
   retention_policy: {
     basis: "user_defined" | "legal" | "business_need";
     ttl_days: number | null;
@@ -48,7 +48,7 @@ export interface Governance {
     erasable: boolean;
     explainable: boolean;
   };
-  exportability: "allowed" | "restricted" | "prohibited";
+  exportability: "allowed" | "restricted" | "forbidden";
   k_anonymity: {
     k: number | null;
     groups: string[];
