@@ -39,9 +39,9 @@ export interface Meta {
 export interface Governance {
   jurisdiction: "GDPR" | "CCPA" | "LGPD" | "HIPAA" | "APPI" | null;
   retention_policy: {
-    basis: "user_defined" | "legal_hold" | "regulatory";
+    basis: "user_defined" | "legal" | "business_need";
     ttl_days: number | null;
-    on_expiry: "soft_delete" | "hard_delete" | "archive";
+    on_expiry: "soft_delete" | "hard_delete" | "anonymize";
   };
   subject_rights: {
     portable: boolean;
