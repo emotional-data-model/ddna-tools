@@ -91,6 +91,7 @@ export interface ExtractionMetadata {
   consentBasis: "consent" | "contract" | "legitimate_interest" | "none";
   jurisdiction?: Governance["jurisdiction"];
   tags?: string[];
+  retentionPolicyBasis?: Governance["retention_policy"]["basis"];
 }
 
 // =============================================================================
@@ -131,7 +132,7 @@ export function createGovernance(metadata: ExtractionMetadata): Governance {
   return {
     jurisdiction: metadata.jurisdiction ?? null,
     retention_policy: {
-      basis: "user_defined",
+      basis: metadata.retentionPolicyBasis ?? "user_defined",
       ttl_days: null, // No automatic expiry by default
       on_expiry: "soft_delete",
     },
