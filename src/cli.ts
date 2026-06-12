@@ -516,6 +516,13 @@ program
         console.log('  Schema: ' + chalk.dim('v0.8.0'));
         console.log('  Model: ' + chalk.dim(result.model));
         console.log('  Confidence: ' + chalk.yellow(result.confidence.toFixed(2)));
+        console.log('  Stance: ' + chalk.dim(result.experientialStance ?? 'null'));
+        if (result.stanceFieldsCleared.length > 0) {
+          console.log(
+            '  Attribution guard: ' +
+              chalk.yellow(`demoted ${result.stanceFieldsCleared.join(', ')}`)
+          );
+        }
       } else {
         console.log(output);
       }

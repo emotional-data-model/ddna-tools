@@ -10,6 +10,7 @@ import type { ChatCompletionContentPart } from 'openai/resources/chat/completion
 import type { EdmProfile, ExtractionInput, LlmExtractionResult, LlmExtractedFields } from './types.js';
 import { EXTRACTION_SYSTEM_PROMPT } from './llm-extractor.js';
 import { getProfilePrompt, calculateProfileConfidence } from './profile-prompts.js';
+import { consumeStance } from './stance-guard.js';
 
 /**
  * Extract EDM fields from content using OpenAI
@@ -82,18 +83,23 @@ export async function extractWithOpenAI(
     throw new Error(`Failed to parse OpenAI response as JSON: ${text.slice(0, 200)}...`);
   }
 
-  // Calculate profile-aware confidence
+  // Calculate profile-aware confidence (pre-guard, matching SDK semantics)
   const confidence = calculateProfileConfidence(
     parsed as Record<string, Record<string, unknown>>,
     profile
   );
+
+  // Consume experiential_stance and apply the deterministic attribution guard
+  const guard = consumeStance(parsed as Record<string, unknown>);
 
   return {
     extracted: parsed as LlmExtractedFields,
     confidence,
     model,
     profile,
-    notes: null,
+    notes: guard.note,
+    experientialStance: guard.stance,
+    stanceFieldsCleared: guard.fieldsCleared,
   };
 }
 

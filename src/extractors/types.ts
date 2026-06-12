@@ -7,6 +7,8 @@
  * per ADR-0023 (canonical profiles only in OSS).
  */
 
+import type { ExperientialStance } from './stance-guard.js';
+
 /**
  * EDM Canonical Profiles
  * Partner profiles (partner:*) are intentionally excluded from OSS
@@ -149,6 +151,9 @@ export type LlmExtractedFields = EssentialExtracted | ExtendedExtracted | FullEx
 
 /**
  * Extraction result
+ *
+ * experiential_stance is carried here (and in telemetry notes for the full
+ * profile) — never in the artifact body. Artifacts stay v0.8.0-conformant.
  */
 export interface LlmExtractionResult {
   extracted: LlmExtractedFields;
@@ -156,4 +161,8 @@ export interface LlmExtractionResult {
   model: string;
   profile: EdmProfile;
   notes: string | null;
+  /** Stance claimed by the extraction model, consumed by the attribution guard */
+  experientialStance: ExperientialStance | null;
+  /** Field paths cleared or floored by the deterministic attribution guard */
+  stanceFieldsCleared: string[];
 }

@@ -106,6 +106,17 @@ export {
   getKimiModelId,
 } from '../extractors/kimi-extractor.js';
 
+// Experiential-stance attribution guard (deterministic, always on)
+export {
+  EXPERIENTIAL_STANCE,
+  isNonSubjectStance,
+  takeStance,
+  applyStanceGuard,
+  consumeStance,
+} from '../extractors/stance-guard.js';
+
+export type { ExperientialStance, StanceGuardResult } from '../extractors/stance-guard.js';
+
 // Profile prompts and utilities
 export {
   ESSENTIAL_PROFILE_PROMPT,

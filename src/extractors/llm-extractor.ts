@@ -9,6 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { EdmProfile, ExtractionInput, LlmExtractionResult, LlmExtractedFields } from './types.js';
 import { getProfilePrompt, calculateProfileConfidence } from './profile-prompts.js';
+import { consumeStance } from './stance-guard.js';
 
 /**
  * System prompt for EDM extraction (Full Profile)
@@ -258,18 +259,25 @@ export async function extractWithLlm(
     throw new Error(`Failed to parse LLM response as JSON: ${textBlock.text.slice(0, 200)}...`);
   }
 
-  // Calculate profile-aware confidence
+  // Calculate profile-aware confidence (pre-guard, matching SDK semantics:
+  // confidence reflects raw extraction population, not post-demotion state)
   const confidence = calculateProfileConfidence(
     parsed as Record<string, Record<string, unknown>>,
     profile
   );
+
+  // Consume experiential_stance and apply the deterministic attribution
+  // guard — stance never survives into the extracted fields
+  const guard = consumeStance(parsed as Record<string, unknown>);
 
   return {
     extracted: parsed as LlmExtractedFields,
     confidence,
     model,
     profile,
-    notes: null,
+    notes: guard.note,
+    experientialStance: guard.stance,
+    stanceFieldsCleared: guard.fieldsCleared,
   };
 }
 
