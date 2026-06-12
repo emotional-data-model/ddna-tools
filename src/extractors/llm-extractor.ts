@@ -26,6 +26,21 @@ Rules
 - Output JSON only — no commentary, markdown, or extra text.
 - If motivation is ambiguous, choose the most conservative option (e.g., "curiosity" vs "fear") or return null.
 
+SUBJECT ANCHORING (critical)
+- The SUBJECT is the person this artifact will belong to. In a chat transcript the SUBJECT is the USER speaker; ASSISTANT text is context only, never a source of the subject's experience.
+- Score every field relative to the SUBJECT, not the passage. emotional_weight measures what this content meant TO THE SUBJECT — not how vivid, dramatic, or emotionally rich the text itself is.
+- Routine work content (debugging, drafting, planning, logistics) is 0.1–0.4 even when the subject expresses momentary relief or frustration. Reserve 0.7+ for events with personal stakes the subject states or plainly carries. Do not invent somatic or emotional detail the subject never expressed.
+- transformational_pivot is true ONLY if the subject explicitly marks the experience as life-changing. Finishing a task, fixing a bug, or shipping a feature is not a transformational pivot.
+
+EXPERIENTIAL STANCE (critical)
+Classify whose experience the emotionally salient material is, in the top-level "experiential_stance" key:
+- "lived" — the subject's own first-hand experience
+- "witnessed" — events the subject personally witnessed or is directly affected by (a loved one's death, a family crisis)
+- "quoted_third_party" — someone else's story the subject quoted, pasted, or retold without being a participant (an article, test data, a stranger's anecdote)
+- "assistant_generated" — fiction, examples, or anecdotes produced by the assistant, not reported by the subject
+- "hypothetical" — imagined scenarios, drafts about invented people, role-play
+If the stance is quoted_third_party, assistant_generated, or hypothetical: do NOT encode that material into wound, identity_thread, expressed_insight, somatic_signature, transformational_pivot, the impulse domain, or high emotional_weight — those fields describe the SUBJECT. Extract only what the content reveals about the subject themselves (e.g. why they engaged with it), or return null fields with low weight.
+
 CRITICAL: Enum Field Constraints
 - Many fields below have CANONICAL values — preferred values for cross-artifact comparability.
 - Use canonical values where they fit. If no canonical value accurately represents the content, use the most accurate free-text term. Accuracy takes precedence over canonical conformance.
@@ -45,6 +60,7 @@ Normalization (very important)
 
 Schema
 {
+  "experiential_stance": "",   // STRICT ENUM: lived | witnessed | quoted_third_party | assistant_generated | hypothetical (pick ONE or null)
   "core": {
     "anchor": "",            // central theme (e.g., "dad's toolbox", "nana's traditions")
     "spark": "",             // what triggered the memory (e.g., "finding the cassette", "first snow")
