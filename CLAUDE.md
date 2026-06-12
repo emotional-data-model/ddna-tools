@@ -2,11 +2,11 @@
 
 CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts as .ddna envelopes.
 
-**Last session:** 2026-04-23 — v0.3.0 published to npm (ADR-0023 open extraction migration)
+**Last session:** 2026-06-12 — v0.4.0 extraction parity with SDK 0.8.9 (stance guard, subject anchoring); branch feat/extraction-parity, not yet published
 
 ## What This Repo Is
 
-- **Current version:** v0.3.0
+- **Current version:** v0.4.0 (unpublished; v0.3.0 on npm)
 - **License:** MIT (open source)
 - **npm:** `ddna-tools`
 - **Remote:** github.com/emotional-data-model/ddna-tools
@@ -67,10 +67,11 @@ DeepaData-issued seals (via /api/v1/issue) add a registry entry: discoverable, r
 - `redact()` — stateless mode
 - `isExpired()` — TTL check
 
-**Extraction (v0.3.0):**
+**Extraction (v0.3.0+):**
 - `extractWithLlm()`, `createAnthropicClient()` — Anthropic Claude
 - `extractWithOpenAI()`, `createOpenAIClient()` — OpenAI GPT
 - `extractWithKimi()`, `createKimiClient()` — Kimi K2
+- `takeStance()`, `applyStanceGuard()`, `consumeStance()` — deterministic experiential-stance attribution guard (v0.4.0, parity with SDK 0.8.9). Stance travels in `LlmExtractionResult` and telemetry notes only — NEVER in the artifact body (artifacts stay v0.8.0-conformant). The SDK's LLM stance-verification pass is commercial-path; do not port it here.
 
 **Domain Factories:**
 - `createMeta()`, `createGovernance()`, `createTelemetry()`, `createSystem()`, `createCrosswalks()`

@@ -65,6 +65,15 @@ ddna check-ttl memory.edm.json
 
 Extract EDM artifact from text using LLM (BYOK: Bring Your Own Key).
 
+OSS extraction matches deepadata-edm-sdk 0.8.9 extraction semantics: the bundled
+prompts classify experiential stance (whose experience the emotionally salient
+material is) and score significance relative to the subject, and a deterministic,
+always-on attribution guard demotes subject-significance fields when the material
+is quoted, assistant-generated, or hypothetical. Stance never enters the artifact
+body — artifacts remain EDM v0.8.0-conformant; it is reported in the extract
+summary and in `--json` output. The SDK's optional LLM stance-verification pass is
+part of the commercial path and is not included here.
+
 ```bash
 ddna extract [options] <input>
 ```
