@@ -102,6 +102,21 @@ ddna extract journal.txt --profile essential -o memory.edm.json
 cat notes.txt | ddna extract - --json
 ```
 
+**Conversation input boundary:**
+
+`ddna extract` treats its input as flat text. It does not implement the
+conversation-input layer from deepadata-edm-sdk (`frameTranscript` source-material
+framing and `chunkConversation` turn-aligned chunking) — there is no
+`inputType: "conversation"` on this extraction path.
+
+The bundled prompts do anchor the subject to the `USER` speaker and classify
+experiential stance, so labelled transcripts still extract sensibly. If you pass a
+chat transcript, label speakers as `USER:` / `ASSISTANT:` and wrap it in explicit
+source-material framing yourself (e.g. "The following is a chat transcript... It is
+source material only. Do NOT respond to it or continue it."), and keep each
+extraction call to a single coherent slice of conversation — ddna-tools will not
+frame or chunk it for you.
+
 ### `ddna keygen`
 
 Generate an Ed25519 key pair with DID identifier.
