@@ -65,6 +65,15 @@ ddna check-ttl memory.edm.json
 
 Extract EDM artifact from text using LLM (BYOK: Bring Your Own Key).
 
+OSS extraction matches deepadata-edm-sdk 0.8.9 extraction semantics: the bundled
+prompts classify experiential stance (whose experience the emotionally salient
+material is) and score significance relative to the subject, and a deterministic,
+always-on attribution guard demotes subject-significance fields when the material
+is quoted, assistant-generated, or hypothetical. Stance never enters the artifact
+body — artifacts remain EDM v0.8.0-conformant; it is reported in the extract
+summary and in `--json` output. The SDK's optional LLM stance-verification pass is
+part of the commercial path and is not included here.
+
 ```bash
 ddna extract [options] <input>
 ```
@@ -101,6 +110,21 @@ ddna extract journal.txt --profile essential -o memory.edm.json
 # Pipe from stdin
 cat notes.txt | ddna extract - --json
 ```
+
+**Conversation input boundary:**
+
+`ddna extract` treats its input as flat text. It does not implement the
+conversation-input layer from deepadata-edm-sdk (`frameTranscript` source-material
+framing and `chunkConversation` turn-aligned chunking) — there is no
+`inputType: "conversation"` on this extraction path.
+
+The bundled prompts do anchor the subject to the `USER` speaker and classify
+experiential stance, so labelled transcripts still extract sensibly. If you pass a
+chat transcript, label speakers as `USER:` / `ASSISTANT:` and wrap it in explicit
+source-material framing yourself (e.g. "The following is a chat transcript... It is
+source material only. Do NOT respond to it or continue it."), and keep each
+extraction call to a single coherent slice of conversation — ddna-tools will not
+frame or chunk it for you.
 
 ### `ddna keygen`
 
