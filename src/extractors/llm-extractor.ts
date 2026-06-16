@@ -82,7 +82,7 @@ Schema
     "temporal_context": "",          // STRICT ENUM: childhood | early_adulthood | midlife | late_life | recent | future | timeless (pick ONE or null)
     "memory_type": "",               // STRICT ENUM: legacy_artifact | fleeting_moment | milestone | reflection | formative_experience (pick ONE or null)
     "media_format": "",              // photo, video, audio, text, photo_with_story (or null)
-    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | orphan | magician | creator | everyman | jester | ruler | mentor (pick ONE or null; lowercase)
+    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | magician | creator | everyman | jester | ruler (pick ONE or null; lowercase)
     "symbolic_anchor": "",           // concrete object/place/ritual (or null)
     "relational_perspective": "",    // STRICT ENUM: self | partner | family | friends | community | humanity (pick ONE or null)
     "temporal_rhythm": "",           // STRICT ENUM: still | sudden | rising | fading | recurring | spiraling | dragging | suspended | looping | cyclic (pick ONE or null)
@@ -161,17 +161,15 @@ Schema
   //   - coping_style: the STRATEGY for managing emotions (reframe_meaning, seek_support, confront, etc.)
   //   - "confront" is valid in BOTH - use drive_state for action impulse, coping_style for emotion management
   //
-  // emotion_primary (STRICT ENUM) vs higher_order_emotion (free text):
-  //   - emotion_primary MUST be one of the 14 listed values ONLY
-  //   - Do NOT put free-text emotions like "compassion", "reflection", "frustration" in emotion_primary
-  //   - Use higher_order_emotion for complex emotions not in the primary list
+  // emotion_primary (two-tier free text) vs higher_order_emotion (free text):
+  //   - emotion_primary: prefer a canonical value when one fits; otherwise use the most accurate
+  //     free-text term (accuracy takes precedence over canonical conformance)
+  //   - Use higher_order_emotion for complex/second-order emotions layered on the primary feeling
   //
-  // narrative_arc (CRITICAL - common error):
-  //   - Describes the STORY TRAJECTORY (overcoming, transformation, connection, reflection, closure)
-  //   - "confrontation" is NOT a valid arc — it describes an event/scene, not a trajectory
-  //   - If the story involves confronting something, use "overcoming" (challenge faced and resolved)
-  //     or "transformation" (fundamental change through conflict)
-  //   - "confront" belongs in drive_state or coping_style, NOT in narrative_arc
+  // narrative_arc (story trajectory):
+  //   - Describes the STORY TRAJECTORY (overcoming, transformation, connection, reflection, closure, loss, confrontation)
+  //   - "confrontation" IS a canonical narrative_arc value (a confronting trajectory); free text accepted if none fits
+  //   - Distinct from the impulse-domain "confront" (drive_state / coping_style), which describes action/coping, not story shape
   //
   // emotional_weight vs strength_score (CRITICAL - different concepts):
   //   - emotional_weight: The felt INTENSITY of the experience in the moment.

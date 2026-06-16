@@ -129,7 +129,7 @@ EXTENDED PROFILE SCHEMA:
     "temporal_context": "",          // STRICT ENUM: childhood | early_adulthood | midlife | late_life | recent | future | timeless
     "memory_type": "",               // STRICT ENUM: legacy_artifact | fleeting_moment | milestone | reflection | formative_experience
     "media_format": "",              // STRICT ENUM: photo | video | audio | text | photo_with_story
-    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | orphan | magician | creator | everyman | jester | ruler | mentor
+    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | magician | creator | everyman | jester | ruler
     "symbolic_anchor": "",
     "relational_perspective": "",    // STRICT ENUM: self | partner | family | friends | community | humanity
     "temporal_rhythm": "",           // STRICT ENUM: still | sudden | rising | fading | recurring | spiraling | dragging | suspended | looping | cyclic
