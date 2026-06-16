@@ -41,19 +41,19 @@ If the stance is quoted_third_party, assistant_generated, or hypothetical: do NO
 
 ESSENTIAL PROFILE SCHEMA (extract these fields ONLY):
 {
-  "experiential_stance": "",  // STRICT ENUM: lived | witnessed | quoted_third_party | assistant_generated | hypothetical (pick ONE or null)
+  "experiential_stance": "", // STRICT ENUM: lived | witnessed | quoted_third_party | assistant_generated | hypothetical (pick ONE or null)
   "core": {
-    "anchor": "",            // central theme (e.g., "dad's toolbox", "nana's traditions")
-    "spark": "",             // what triggered the memory (e.g., "finding the cassette", "first snow")
-    "wound": "",             // The specific vulnerability, loss, or pain present — NOT generic labels like 'loss' or 'grief' but what exactly was lost or why it hurts. Examples: 'unlived travel dream', 'war silence never spoken', 'father died before I knew him', 'shame of not fitting in'. If no wound is present, use null.
-    "fuel": "",              // what energized the experience (e.g., "shared laughter", "curiosity")
-    "bridge": "",            // connection between past and present (e.g., "replaying old tape", "returning to the porch")
-    "echo": ""               // what still resonates (e.g., "her laugh", "smell of oil", "city lights on water")
+    "anchor": "", // central theme (e.g., "dad's toolbox", "nana's traditions")
+    "spark": "",  // what triggered the memory (e.g., "finding the cassette", "first snow")
+    "wound": "",  // The specific vulnerability, loss, or pain present — NOT generic labels like 'loss' or 'grief' but what exactly was lost or why it hurts. Examples: 'unlived travel dream', 'war silence never spoken', 'father died before I knew him', 'shame of not fitting in'. If no wound is present, use null.
+    "fuel": "",   // what energized the experience (e.g., "shared laughter", "curiosity")
+    "bridge": "", // connection between past and present (e.g., "replaying old tape", "returning to the porch")
+    "echo": ""    // what still resonates (e.g., "her laugh", "smell of oil", "city lights on water")
   },
   "constellation": {
-    "emotion_primary": "",   // CANONICAL: joy | sadness | fear | anger | wonder | peace | tenderness | reverence | pride | anxiety | gratitude | longing | hope | shame | disappointment | relief | frustration (free text accepted if none fits)
-    "emotion_subtone": [],   // 2–4 short words
-    "narrative_arc": ""      // CANONICAL: overcoming | transformation | connection | reflection | closure | loss | confrontation (free text accepted if none fits)
+    "emotion_primary": "", // CANONICAL: joy | sadness | fear | anger | wonder | peace | tenderness | reverence | pride | anxiety | gratitude | longing | hope | shame | disappointment | relief | frustration (free text accepted if none fits)
+    "emotion_subtone": [], // 2–4 short words (e.g., bittersweet, grateful) — free text array
+    "narrative_arc": ""    // CANONICAL: overcoming | transformation | connection | reflection | closure | loss | confrontation (free text accepted if none fits)
   }
 }
 
@@ -108,50 +108,50 @@ If the stance is quoted_third_party, assistant_generated, or hypothetical: do NO
 
 EXTENDED PROFILE SCHEMA:
 {
-  "experiential_stance": "",         // STRICT ENUM: lived | witnessed | quoted_third_party | assistant_generated | hypothetical (pick ONE or null)
+  "experiential_stance": "", // STRICT ENUM: lived | witnessed | quoted_third_party | assistant_generated | hypothetical (pick ONE or null)
   "core": {
-    "anchor": "",            // central theme (e.g., "dad's toolbox", "nana's traditions")
-    "spark": "",             // what triggered the memory (e.g., "finding the cassette", "first snow")
-    "wound": "",             // The specific vulnerability, loss, or pain present — NOT generic labels like 'loss' or 'grief' but what exactly was lost or why it hurts. Examples: 'unlived travel dream', 'war silence never spoken', 'father died before I knew him', 'shame of not fitting in'. If no wound is present, use null.
-    "fuel": "",              // what energized the experience (e.g., "shared laughter", "curiosity")
-    "bridge": "",            // connection between past and present (e.g., "replaying old tape", "returning to the porch")
-    "echo": "",              // what still resonates (e.g., "her laugh", "smell of oil", "city lights on water")
-    "narrative": ""          // 3–5 sentences; include ≥1 sensory detail, ≥1 temporal cue, and a symbolic callback; faithful and concise
+    "anchor": "",   // central theme (e.g., "dad's toolbox", "nana's traditions")
+    "spark": "",    // what triggered the memory (e.g., "finding the cassette", "first snow")
+    "wound": "",    // The specific vulnerability, loss, or pain present — NOT generic labels like 'loss' or 'grief' but what exactly was lost or why it hurts. Examples: 'unlived travel dream', 'war silence never spoken', 'father died before I knew him', 'shame of not fitting in'. If no wound is present, use null.
+    "fuel": "",     // what energized the experience (e.g., "shared laughter", "curiosity")
+    "bridge": "",   // connection between past and present (e.g., "replaying old tape", "returning to the porch")
+    "echo": "",     // what still resonates (e.g., "her laugh", "smell of oil", "city lights on water")
+    "narrative": "" // 3–5 sentences. REQUIRED: include ALL of the following — ≥1 concrete sensory detail (sight, sound, smell, texture), ≥1 temporal cue that anchors the memory in time, ≥1 symbolic callback that connects past to present. Write from the subject's perspective. Do not compress or summarise — give the memory space to breathe. Faithful and specific. Never generic.
   },
   "constellation": {
     "emotion_primary": "",           // CANONICAL: joy | sadness | fear | anger | wonder | peace | tenderness | reverence | pride | anxiety | gratitude | longing | hope | shame | disappointment | relief | frustration (free text accepted if none fits)
-    "emotion_subtone": [],
-    "higher_order_emotion": "",
-    "meta_emotional_state": "",
-    "interpersonal_affect": "",
+    "emotion_subtone": [],           // 2–4 short words (e.g., bittersweet, grateful) — free text array
+    "higher_order_emotion": "",      // free text: e.g., awe, forgiveness, pride, moral_elevation (or null)
+    "meta_emotional_state": "",      // free text: e.g., acceptance, confusion, curiosity (or null)
+    "interpersonal_affect": "",      // free text: e.g., warmth, openness, defensiveness (or null)
     "narrative_arc": "",             // CANONICAL: overcoming | transformation | connection | reflection | closure | loss | confrontation (free text accepted if none fits)
     "relational_dynamics": "",       // CANONICAL: parent_child | grandparent_grandchild | romantic_partnership | couple | sibling_bond | family | friendship | friend | companionship | colleague | mentorship | reunion | community_ritual | grief | self_reflection | professional | therapeutic | service | adversarial (free text accepted if none fits)
-    "temporal_context": "",          // STRICT ENUM: childhood | early_adulthood | midlife | late_life | recent | future | timeless
-    "memory_type": "",               // STRICT ENUM: legacy_artifact | fleeting_moment | milestone | reflection | formative_experience
-    "media_format": "",              // STRICT ENUM: photo | video | audio | text | photo_with_story
-    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | magician | creator | everyman | jester | ruler
-    "symbolic_anchor": "",
-    "relational_perspective": "",    // STRICT ENUM: self | partner | family | friends | community | humanity
-    "temporal_rhythm": "",           // STRICT ENUM: still | sudden | rising | fading | recurring | spiraling | dragging | suspended | looping | cyclic
-    "identity_thread": "",
-    "expressed_insight": "",
-    "transformational_pivot": false,
-    "somatic_signature": "",
+    "temporal_context": "",          // STRICT ENUM: childhood | early_adulthood | midlife | late_life | recent | future | timeless (pick ONE or null)
+    "memory_type": "",               // STRICT ENUM: legacy_artifact | fleeting_moment | milestone | reflection | formative_experience (pick ONE or null)
+    "media_format": "",              // STRICT ENUM: photo | video | audio | text | photo_with_story (pick ONE or null)
+    "narrative_archetype": "",       // STRICT ENUM: hero | caregiver | seeker | sage | lover | outlaw | innocent | magician | creator | everyman | jester | ruler (pick ONE or null; lowercase)
+    "symbolic_anchor": "",           // concrete object/place/ritual (or null)
+    "relational_perspective": "",    // STRICT ENUM: self | partner | family | friends | community | humanity (pick ONE or null)
+    "temporal_rhythm": "",           // STRICT ENUM: still | sudden | rising | fading | recurring | spiraling | dragging | suspended | looping | cyclic (pick ONE or null)
+    "identity_thread": "",           // short sentence
+    "expressed_insight": "",         // brief insight explicitly stated by subject (extracted, not inferred)
+    "transformational_pivot": false, // true if subject explicitly identifies this as life-changing
+    "somatic_signature": "",         // bodily sensations explicitly described (e.g., "chest tightness", "warmth spreading") or null
     "arc_type": ""                   // CANONICAL: betrayal | liberation | grief | discovery | resistance | bond | moral_awakening | transformation | reconciliation | reckoning | threshold | exile | gratitude | authenticity (free text accepted if none fits). gratitude = moments of thankfulness, appreciation, acknowledging blessing; authenticity = feeling fully oneself, self-alignment, identity congruence
   },
   "milky_way": {
-    "event_type": "",
-    "location_context": "",
-    "associated_people": [],
-    "visibility_context": "",        // STRICT ENUM: private | family_only | shared_publicly
-    "tone_shift": ""
+    "event_type": "",         // e.g., family gathering, farewell, birthday (or null)
+    "location_context": "",   // place from text or image (or null)
+    "associated_people": [],  // names or roles (proper case allowed)
+    "visibility_context": "", // STRICT ENUM: private | family_only | shared_publicly (pick ONE or null)
+    "tone_shift": ""          // e.g., loss to gratitude (or null)
   },
   "gravity": {
-    "emotional_weight": 0.0,         // 0.0–1.0 (felt intensity IN THE MOMENT). Calibration: 0.9+ life-altering irreversible moments; 0.7-0.9 significant personal events with strong emotional response; 0.4-0.7 meaningful but routine emotional experiences; 0.1-0.4 mild passing emotional content
-    "valence": "",                   // STRICT ENUM: positive | negative | mixed
-    "tether_type": "",               // STRICT ENUM: person | symbol | event | place | ritual | object | tradition | identity | self
-    "recurrence_pattern": "",        // STRICT ENUM: cyclical | isolated | chronic | emerging
-    "strength_score": 0.0            // 0.0–1.0 (how BOUND/STUCK this memory is)
+    "emotional_weight": 0.0,  // 0.0–1.0 (felt intensity IN THE MOMENT). Calibration: 0.9+ life-altering irreversible moments; 0.7-0.9 significant personal events with strong emotional response; 0.4-0.7 meaningful but routine emotional experiences; 0.1-0.4 mild passing emotional content
+    "valence": "",            // STRICT ENUM: positive | negative | mixed (pick ONE or null)
+    "tether_type": "",        // CANONICAL: person | symbol | event | place | ritual | object | tradition | identity | self (free text accepted if none fits)
+    "recurrence_pattern": "", // CANONICAL: cyclical | isolated | chronic | emerging (free text accepted if none fits)
+    "strength_score": 0.0     // 0.0–1.0 (how BOUND/STUCK this memory is)
   }
 }
 

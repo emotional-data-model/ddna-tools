@@ -5,12 +5,16 @@ on:
     paths:
       - 'schemas/**'
       - 'scripts/sync-schemas.ts'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/schema-sync-check.yml'
   push:
     branches: [main]
     paths:
       - 'schemas/**'
       - 'scripts/sync-schemas.ts'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/schema-sync-check.yml'
 
 jobs:

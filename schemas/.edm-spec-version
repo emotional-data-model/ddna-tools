@@ -1,4 +1,5 @@
-b3cae0d0f5a5d8d55735fc390cd1457e042d662e
-# edm-spec pin — SHA of emotional-data-model/edm-spec used to populate
-# schemas/ and schemas/fragments/. Update via scripts/sync-schemas.ts.
-# Nearest tag: v0.8.0 (3d9a841). HEAD contains v0.8.0 schema fixes.
+0.8.2
+# edm-spec pin — npm version of the published emotional-data-model/edm-spec
+# package used to populate schemas/ and schemas/fragments/. The authoritative
+# pin is the version range in package.json (resolved in package-lock.json);
+# this file records the version last synced via scripts/sync-schemas.ts.
