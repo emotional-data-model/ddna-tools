@@ -22,6 +22,16 @@ import { consumeStance } from './stance-guard.js';
 const DEFAULT_KIMI_MODEL = process.env.KIMI_MODEL || 'kimi-k2.5';
 
 /**
+ * Thinking models spend output tokens on reasoning before emitting JSON —
+ * a 4096 budget truncates the artifact mid-object (SDK parity:
+ * llm-extractor defaultMaxTokens).
+ */
+const THINKING_MODEL_RE = /k2.[5-9]|k2.d{2,}|k3|thinking|reasoner/i;
+function maxTokensFor(model: string): number {
+  return THINKING_MODEL_RE.test(model) ? 16_384 : 4096;
+}
+
+/**
  * Kimi API base URLs
  * - Direct: api.moonshot.cn or api.moonshot.ai (requires MOONSHOT_API_KEY or KIMI_API_KEY)
  * - OpenRouter: openrouter.ai (requires OPENROUTER_API_KEY)
@@ -67,7 +77,7 @@ export async function extractWithKimi(
 
   const response = await client.chat.completions.create({
     model,
-    max_tokens: 4096,
+    max_tokens: maxTokensFor(model),
     messages: [
       {
         role: 'system',
