@@ -2,11 +2,14 @@
 
 CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts as .ddna envelopes.
 
-**Last session:** 2026-06-12 — v0.4.0 extraction parity with SDK 0.8.9 (stance guard, subject anchoring); branch feat/extraction-parity, not yet published
+**Last session:** 2026-07-22 — version-truth sweep: edm-spec dependency at `file:../edm-spec` (0.8.3), EDM version derived from the installed spec (`src/lib/edm-version.ts`), bundled schemas synced to 0.8.3; branch feat/version-truth-083
+
+**Pending:** flip the `edm-spec` dependency from `file:../edm-spec` back to a versioned npm range (`^0.8.3`) once the founder publishes edm-spec 0.8.3 to npm.
 
 ## What This Repo Is
 
-- **Current version:** v0.4.0 (unpublished; v0.3.0 on npm)
+- **Current version:** v0.4.1
+- **EDM spec:** canonical, consumed as a dependency — currently 0.8.3 via `file:../edm-spec` (see Pending above). Full profile = **91 fields**. `narrative_archetype` = **12 canonical identity archetypes** (no `orphan`, no `mentor`) per ADR-0030.
 - **License:** MIT (open source)
 - **npm:** `ddna-tools`
 - **Remote:** github.com/emotional-data-model/ddna-tools
@@ -14,7 +17,7 @@ CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts
 The reference implementation for the complete EDM artifact pipeline:
 
 1. **Extract** — Transform text into structured EDM artifacts using LLM (BYOK: Anthropic, OpenAI, Kimi)
-2. **Validate** — Check artifact against bundled v0.8.0 schema
+2. **Validate** — Check artifact against the bundled v0.8-line schema (synced from the installed edm-spec)
 3. **Seal** — Create cryptographically signed .ddna envelope (Ed25519, JCS, W3C Data Integrity)
 4. **Verify** — Validate envelope signature offline
 5. **Inspect** — Display envelope contents
@@ -30,7 +33,7 @@ ddna extract (LLM extraction + domain assembly)
     ↓
 .edm.json artifact
     ↓
-ddna validate (schema check against bundled v0.8.0)
+ddna validate (schema check against bundled v0.8-line schemas)
     ↓
 ddna seal (Ed25519 local signing)
     ↓
@@ -47,7 +50,7 @@ DeepaData-issued seals (via /api/v1/issue) add a registry entry: discoverable, r
 | Command | Description |
 |---------|-------------|
 | `ddna extract` | Extract EDM artifact from text using LLM (BYOK: requires API key) |
-| `ddna validate` | Validate EDM artifact against v0.8.0 schema |
+| `ddna validate` | Validate EDM artifact against the bundled v0.8-line schema |
 | `ddna seal` | Seal artifact into .ddna envelope (local Ed25519 signing) |
 | `ddna verify` | Verify .ddna envelope signature |
 | `ddna inspect` | Display envelope contents (human/JSON) |
@@ -71,7 +74,8 @@ DeepaData-issued seals (via /api/v1/issue) add a registry entry: discoverable, r
 - `extractWithLlm()`, `createAnthropicClient()` — Anthropic Claude
 - `extractWithOpenAI()`, `createOpenAIClient()` — OpenAI GPT
 - `extractWithKimi()`, `createKimiClient()` — Kimi K2
-- `takeStance()`, `applyStanceGuard()`, `consumeStance()` — deterministic experiential-stance attribution guard (v0.4.0, parity with SDK 0.8.9). Stance travels in `LlmExtractionResult` and telemetry notes only — NEVER in the artifact body (artifacts stay v0.8.0-conformant). The SDK's LLM stance-verification pass is commercial-path; do not port it here.
+- `takeStance()`, `applyStanceGuard()`, `consumeStance()` — deterministic experiential-stance attribution guard (v0.4.0, parity with SDK 0.8.9). Stance travels in `LlmExtractionResult` and telemetry notes only — NEVER in the artifact body (artifacts stay v0.8-line-conformant). The SDK's LLM stance-verification pass is commercial-path; do not port it here.
+- `EDM_VERSION`, `EDM_VERSION_LINE`, `EDM_SCHEMA_URL_VERSION`, `EDM_VERSION_LABEL` — version truth derived from the installed edm-spec package (`src/lib/edm-version.ts`); no literal EDM version strings in runtime code.
 
 **Domain Factories:**
 - `createMeta()`, `createGovernance()`, `createTelemetry()`, `createSystem()`, `createCrosswalks()`
@@ -90,11 +94,11 @@ If asked to add partner profile support, stop and reference ADR-0017 and spec §
 
 ## Schema Synchronisation
 
-Bundled schemas in `schemas/` are a read-only mirror of canonical `emotional-data-model/edm-spec` at the SHA pinned in `schemas/.edm-spec-version`. Per session 2026-04-23, a local schema fork was flagged and reverted; the rule is now enforced mechanically.
+Bundled schemas in `schemas/` are a read-only mirror of the **installed** `edm-spec` package (the version range pinned in package.json, resolved in package-lock.json). `schemas/.edm-spec-version` records the version last synced. Per session 2026-04-23, a local schema fork was flagged and reverted; the rule is now enforced mechanically. The former git-SHA pin was replaced by the npm version pin (2026-06-16).
 
 **Updating bundled schemas:**
-1. Land the change upstream in edm-spec.
-2. Bump the SHA in `schemas/.edm-spec-version`.
+1. Land the change upstream in edm-spec and publish (or point the dependency at a local clone pre-publish).
+2. Bump/refresh the `edm-spec` dependency (`npm install`).
 3. Run `npx tsx scripts/sync-schemas.ts`.
 4. Commit the resulting diff.
 
@@ -116,6 +120,6 @@ Design: `deepadata-com/planning/SCHEMA_SYNC_PROCESS_2026-04-24.md`. edm-sdk Zod 
 
 ## Source of Truth
 
-→ **See `deepadata-com/planning/CLAUDE_PROJECT.md`**
+→ **See `deepadata-com/planning/STATE.md`** (read-first state entry point; `planning/CLAUDE_PROJECT.md` is superseded)
 
-The platform repo (deepadata-com) is the source of truth for session state, version alignment, and task tracking.
+The platform repo (deepadata-com) is the source of truth for session state, version alignment, and task tracking. The **published edm-spec package** is the source of truth for the EDM schema (ADR-0030).
