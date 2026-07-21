@@ -153,7 +153,7 @@ export type LlmExtractedFields = EssentialExtracted | ExtendedExtracted | FullEx
  * Extraction result
  *
  * experiential_stance is carried here (and in telemetry notes for the full
- * profile) — never in the artifact body. Artifacts stay v0.8.0-conformant.
+ * profile) — never in the artifact body. Artifacts stay v0.8-line-conformant.
  */
 export interface LlmExtractionResult {
   extracted: LlmExtractedFields;

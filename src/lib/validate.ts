@@ -1,6 +1,7 @@
 /**
  * Schema Validation for EDM Artifacts
- * Validates artifacts against EDM v0.8.0 JSON schema
+ * Validates artifacts against the bundled EDM v0.8-line JSON schema
+ * (synced from the installed edm-spec package — see schemas/.edm-spec-version)
  *
  * Enum values are derived from bundled schema fragments at module load.
  * This ensures single source of truth: schemas/fragments/*.json
@@ -11,6 +12,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { EDM_VERSION } from './edm-version.js';
 
 // =============================================================================
 // Schema Loading
@@ -139,9 +141,10 @@ export interface ValidationResult {
 // =============================================================================
 
 /**
- * Schema version this validator supports
+ * Schema version this validator supports — derived from the installed
+ * edm-spec package (src/lib/edm-version.ts), never restated as a literal.
  */
-const SCHEMA_VERSION = '0.8.0';
+const SCHEMA_VERSION = EDM_VERSION;
 
 /**
  * Accepted version pattern
@@ -195,7 +198,7 @@ function validateEnumField(
 }
 
 /**
- * Validate an EDM artifact against the v0.8.0 schema
+ * Validate an EDM artifact against the bundled v0.8-line schema
  *
  * FREE: Does not require a DeepaData API key.
  *

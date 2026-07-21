@@ -3,7 +3,7 @@
  *
  * Essential Profile: 24 required fields for memory platforms
  * Extended Profile: 50 fields for journaling apps
- * Full Profile: all 96 fields for therapy/clinical tools
+ * Full Profile: all 91 fields for therapy/clinical tools
  *
  * Partner profiles are intentionally excluded per ADR-0023.
  * Partner profile prompts require registry resolution per EDM spec §3.7.6.

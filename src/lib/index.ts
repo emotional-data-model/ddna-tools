@@ -1,5 +1,5 @@
 /**
- * ddna-tools v0.3.0
+ * ddna-tools
  * Reference implementation for .ddna envelope specification
  * Extraction, sealing, and verification with W3C Data Integrity Proofs
  *
@@ -13,7 +13,7 @@
  * - verify() — verify a sealed .ddna envelope
  * - inspect() — read envelope contents
  * - redact() — stateless mode, null sensitive fields
- * - validate() — schema validation against EDM v0.8.0
+ * - validate() — schema validation against the bundled EDM v0.8-line schema
  * - isExpired() — check artifact TTL
  *
  * Extraction (v0.3.0):
@@ -47,7 +47,15 @@ export type { RedactionResult, TtlResult } from './stateless.js';
 export { validate, isValid } from './validate.js';
 export type { ValidationResult, ValidationError } from './validate.js';
 
-// EDM profile schema validation (v0.8.0)
+// EDM version truth — derived from the installed edm-spec package
+export {
+  EDM_VERSION,
+  EDM_VERSION_LINE,
+  EDM_SCHEMA_URL_VERSION,
+  EDM_VERSION_LABEL,
+} from './edm-version.js';
+
+// EDM profile schema validation (bundled v0.8-line schemas)
 // validateEdmSchema (async) fetches from canonical URL with bundled fallback
 // validateEdmSchemaSync uses bundled schemas only (for sync contexts)
 export {

@@ -13,6 +13,7 @@ import canonicalize from 'canonicalize';
 import { base58btc } from 'multiformats/bases/base58';
 import { isValidDidUrl } from './did.js';
 import { validateEdmSchemaSync } from './validate-schema.js';
+import { EDM_VERSION, EDM_VERSION_LINE } from './edm-version.js';
 import type {
   EdmPayload,
   DdnaHeader,
@@ -68,7 +69,8 @@ export class SealingKeyError extends Error {
  * Validate EDM payload against profile schema
  *
  * Reads meta.profile to determine which schema to use (essential, extended, full).
- * Validates against bundled EDM v0.6.0 JSON Schema files.
+ * Validates against the bundled EDM v0.8-line JSON Schema files
+ * (synced from the installed edm-spec package).
  *
  * @param payload - EDM payload to validate
  * @throws SchemaValidationError if validation fails
@@ -125,15 +127,22 @@ function buildDdnaHeader(edmPayload: EdmPayload, overrides?: Partial<DdnaHeader>
   // Extract profile from meta
   const profile = (meta as Record<string, unknown>).profile as string || 'full';
 
+  // The envelope preserves the artifact's own version stamp; only when the
+  // artifact carries none do we fall back to the installed spec version.
+  const edmVersion = (meta as Record<string, unknown>).version as string || EDM_VERSION;
+  // payload_type carries the schema line (e.g. "edm.v0.8.full"), derived
+  // from the artifact's version — never a hardcoded line.
+  const versionLine = /^\d+\.\d+/.exec(edmVersion)?.[0] ?? EDM_VERSION_LINE;
+
   // Build header with defaults and EDM payload values
   const header: DdnaHeader = {
     ddna_version: '1.1',
     created_at: new Date().toISOString(),
-    edm_version: (meta as Record<string, unknown>).version as string || '0.6.0',
+    edm_version: edmVersion,
     owner_user_id: meta.owner_user_id || null,
     exportability: (governance.exportability as DdnaHeader['exportability']) || 'allowed',
     jurisdiction: (governance.jurisdiction as string) || 'XX',
-    payload_type: `edm.v0.6.${profile}`,
+    payload_type: `edm.v${versionLine}.${profile}`,
     consent_basis: meta.consent_basis || 'consent',
     retention_policy: (governance.retention_policy as DdnaHeader['retention_policy']) || {
       basis: 'user_defined',

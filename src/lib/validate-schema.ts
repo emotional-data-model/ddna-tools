@@ -8,7 +8,8 @@
  *    https://deepadata.com/schemas/edm/{version}/edm.{profile}.schema.json
  * 2. Fall back to bundled schemas if fetch fails (offline/network error)
  *
- * Bundled schemas correspond to edm-spec v0.8.0 — update when spec version increments.
+ * Bundled schemas are a sync mirror of the installed edm-spec package
+ * (scripts/sync-schemas.ts; synced version recorded in schemas/.edm-spec-version).
  */
 
 import Ajv from 'ajv';
@@ -23,6 +24,19 @@ const SCHEMAS_DIR = join(__dirname, '../../schemas');
 
 // Remote schema base URL
 const SCHEMA_BASE_URL = 'https://deepadata.com/schemas/edm';
+
+// User-Agent for remote schema fetches — tool version derived from this
+// package's own package.json, never restated as a literal.
+const USER_AGENT = (() => {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(join(__dirname, '../../package.json'), 'utf-8')
+    ) as { name?: string; version?: string };
+    return `deepadata-ddna-tools/${pkg.version ?? '0.0.0'}`;
+  } catch {
+    return 'deepadata-ddna-tools/unknown';
+  }
+})();
 
 // Fetch timeout in milliseconds
 const FETCH_TIMEOUT_MS = 5000;
@@ -102,7 +116,7 @@ async function fetchRemoteSchema(
       signal: controller.signal,
       headers: {
         'Accept': 'application/schema+json, application/json',
-        'User-Agent': 'deepadata-ddna-tools/0.2.0',
+        'User-Agent': USER_AGENT,
       },
     });
 
@@ -147,7 +161,7 @@ async function fetchRemoteFragment(
       signal: controller.signal,
       headers: {
         'Accept': 'application/schema+json, application/json',
-        'User-Agent': 'deepadata-ddna-tools/0.2.0',
+        'User-Agent': USER_AGENT,
       },
     });
 

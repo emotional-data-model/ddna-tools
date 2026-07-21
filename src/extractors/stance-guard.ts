@@ -19,7 +19,7 @@
  *
  * experiential_stance is proposed for EDM v0.9. Until the spec lands it
  * travels in the extraction result only, never in the artifact body, so
- * artifacts stay v0.8.0-conformant.
+ * artifacts stay v0.8-line-conformant.
  */
 
 /**

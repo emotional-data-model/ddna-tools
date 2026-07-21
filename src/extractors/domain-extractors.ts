@@ -7,11 +7,13 @@
  */
 import { randomUUID } from "crypto";
 import type { EdmProfile, LlmExtractedFields } from "./types.js";
+import { EDM_VERSION } from "../lib/edm-version.js";
 
 // =============================================================================
-// EDM Schema Version
+// EDM Schema Version — derived from the installed edm-spec package
+// (src/lib/edm-version.ts). Stamped into artifact meta.version.
 // =============================================================================
-export const EDM_SCHEMA_VERSION = "0.8.0";
+export const EDM_SCHEMA_VERSION = EDM_VERSION;
 
 // =============================================================================
 // Domain Types (self-contained to avoid SDK dependency)
@@ -22,6 +24,8 @@ export interface Meta {
   version: string;
   profile: EdmProfile;
   created_at: string;
+  /** Timestamp of the original source content (extraction time is created_at). Added in edm-spec 0.8.3. */
+  source_timestamp: string | null;
   updated_at: string | null;
   locale: string | null;
   owner_user_id: string | null;
@@ -92,6 +96,8 @@ export interface ExtractionMetadata {
   jurisdiction?: Governance["jurisdiction"];
   tags?: string[];
   retentionPolicyBasis?: Governance["retention_policy"]["basis"];
+  /** ISO-8601 timestamp of the original source content, if known */
+  sourceTimestamp?: string;
 }
 
 // =============================================================================
@@ -107,6 +113,7 @@ export function createMeta(
     version: EDM_SCHEMA_VERSION,
     profile,
     created_at: new Date().toISOString(),
+    source_timestamp: metadata.sourceTimestamp ?? null,
     updated_at: null,
     locale: metadata.locale ?? null,
     owner_user_id: metadata.subjectId ?? null,

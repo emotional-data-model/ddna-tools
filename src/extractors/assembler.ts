@@ -106,6 +106,7 @@ export const FULL_PROFILE_FIELDS = {
     "version",
     "profile",
     "created_at",
+    "source_timestamp",
     "updated_at",
     "locale",
     "owner_user_id",

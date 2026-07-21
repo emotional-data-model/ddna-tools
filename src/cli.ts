@@ -29,6 +29,7 @@ import { inspect, inspectJson } from './lib/inspect.js';
 import { keygen, keyToHex, hexToKey } from './lib/keygen.js';
 import { redact, isExpired } from './lib/stateless.js';
 import { validate } from './lib/validate.js';
+import { EDM_VERSION_LABEL } from './lib/edm-version.js';
 import type { EdmPayload } from './lib/types.js';
 
 // Extraction imports
@@ -301,7 +302,7 @@ program
 
 program
   .command('validate')
-  .description('Validate an EDM artifact against v0.8.0 schema')
+  .description(`Validate an EDM artifact against the bundled ${EDM_VERSION_LABEL} schema`)
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('--json', 'Output as JSON')
   .action((input: string, options) => {
@@ -513,7 +514,7 @@ program
         fs.writeFileSync(options.output, output);
         console.log(chalk.green('✓') + ' EDM artifact written to: ' + chalk.cyan(options.output));
         console.log('  Profile: ' + chalk.dim(result.profile));
-        console.log('  Schema: ' + chalk.dim('v0.8.0'));
+        console.log('  Schema: ' + chalk.dim(EDM_VERSION_LABEL));
         console.log('  Model: ' + chalk.dim(result.model));
         console.log('  Confidence: ' + chalk.yellow(result.confidence.toFixed(2)));
         console.log('  Stance: ' + chalk.dim(result.experientialStance ?? 'null'));
