@@ -16,7 +16,10 @@ import { consumeStance } from './stance-guard.js';
  * Default Kimi K2 model identifier
  * MoonshotAI exposes this via their OpenAI-compatible endpoint
  */
-const DEFAULT_KIMI_MODEL = 'kimi-k2-0711-preview';
+// KIMI_MODEL env wins; the old hardcoded 'kimi-k2-0711-preview' default no
+// longer exists at Moonshot (404 'Not found the model') — every kimi BYOK
+// extraction failed until this derivation (smoke S8, 2026-07-22).
+const DEFAULT_KIMI_MODEL = process.env.KIMI_MODEL || 'kimi-k2.5';
 
 /**
  * Kimi API base URLs
