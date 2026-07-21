@@ -1,4 +1,4 @@
-0.8.2
+0.8.3
 # edm-spec pin — npm version of the published emotional-data-model/edm-spec
 # package used to populate schemas/ and schemas/fragments/. The authoritative
 # pin is the version range in package.json (resolved in package-lock.json);
