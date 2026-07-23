@@ -1,6 +1,6 @@
 {
   "name": "ddna-tools",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Reference implementation for .ddna envelope specification - extraction, sealing, and verification with W3C Data Integrity Proofs",
   "type": "module",
   "main": "./dist/lib/index.js",
