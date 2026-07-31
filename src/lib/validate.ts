@@ -1,10 +1,19 @@
 /**
- * Schema Validation for EDM Artifacts
- * Validates artifacts against the bundled EDM v0.8-line JSON schema
- * (synced from the installed edm-spec package — see schemas/.edm-spec-version)
+ * Heuristic field/enum checks for EDM artifacts (LEGACY — not seal-grade).
  *
- * Enum values are derived from bundled schema fragments at module load.
- * This ensures single source of truth: schemas/fragments/*.json
+ * This module checks required meta fields, enum membership, and a few
+ * types. It does NOT run the JSON Schema: minItems/maxItems,
+ * additionalProperties, per-profile required domains, and nested
+ * structures are unchecked. An artifact this module passes can still be
+ * rejected by seal (the session-09 two-validator drift, 2026-07-29).
+ *
+ * Seal-grade validation is `validateEdmSchemaSync` in validate-schema.ts
+ * (ajv over the resolved profile schema) — the CLI `validate` command and
+ * seal both use it. This module remains exported for API compatibility
+ * and for fast enum-level feedback only.
+ *
+ * Enum values are derived from bundled schema fragments at module load
+ * (schemas/fragments/*.json, synced from the installed edm-spec package).
  *
  * FREE: Does not require a DeepaData API key.
  */

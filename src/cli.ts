@@ -28,7 +28,8 @@ import { verify } from './lib/verify.js';
 import { inspect, inspectJson } from './lib/inspect.js';
 import { keygen, keyToHex, hexToKey } from './lib/keygen.js';
 import { redact, isExpired } from './lib/stateless.js';
-import { validate } from './lib/validate.js';
+import { validateEdmSchemaSync } from './lib/validate-schema.js';
+import type { SchemaValidationResult } from './lib/validate-schema.js';
 import { EDM_VERSION_LABEL } from './lib/edm-version.js';
 import type { EdmPayload } from './lib/types.js';
 
@@ -302,7 +303,9 @@ program
 
 program
   .command('validate')
-  .description(`Validate an EDM artifact against the bundled ${EDM_VERSION_LABEL} schema`)
+  .description(
+    `Validate an EDM artifact against the bundled ${EDM_VERSION_LABEL} profile schema (the same check seal runs)`
+  )
   .argument('<input>', 'Path to EDM artifact (.edm.json or .json)')
   .option('--json', 'Output as JSON')
   .action((input: string, options) => {
@@ -310,28 +313,52 @@ program
       // Read input file
       const artifact = readJsonFile(input);
 
-      // Validate
-      const result = validate(artifact);
+      // Seal-parity validation: ajv over the resolved profile schema —
+      // the exact check seal's validateEdmPayload performs. A VALID here
+      // is seal-grade; the previous field/enum heuristic passed artifacts
+      // that seal rejects (minItems, additionalProperties, required
+      // domains — the session-09 two-validator drift).
+      let result: SchemaValidationResult;
+      try {
+        result = validateEdmSchemaSync(artifact);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (options.json) {
+          console.log(
+            JSON.stringify(
+              {
+                valid: false,
+                profile: null,
+                errors: [{ path: '/meta/profile', message, keyword: 'profile' }],
+                schemaSource: 'bundled',
+              },
+              null,
+              2
+            )
+          );
+        } else {
+          console.log(chalk.red('INVALID') + ' - ' + message);
+        }
+        process.exit(1);
+      }
 
       if (options.json) {
         console.log(JSON.stringify(result, null, 2));
       } else {
         if (result.valid) {
-          console.log(chalk.green('VALID') + ' - Schema validation passed');
-          console.log('  Schema Version: ' + chalk.dim(result.schemaVersion));
+          console.log(chalk.green('VALID') + ' - Schema validation passed (seal-grade)');
+          console.log('  Profile: ' + chalk.dim(result.profile));
+          console.log('  Schema: ' + chalk.dim(`${EDM_VERSION_LABEL} (${result.schemaSource})`));
         } else {
           console.log(chalk.red('INVALID') + ' - Schema validation failed');
-          console.log('  Schema Version: ' + chalk.dim(result.schemaVersion));
+          console.log('  Profile: ' + chalk.dim(result.profile));
+          console.log('  Schema: ' + chalk.dim(`${EDM_VERSION_LABEL} (${result.schemaSource})`));
           console.log('');
           console.log('Errors:');
           for (const error of result.errors) {
-            console.log('  ' + chalk.yellow(error.path) + ': ' + error.message);
-            if (error.expected) {
-              console.log('    Expected: ' + chalk.dim(error.expected));
-            }
-            if (error.actual) {
-              console.log('    Actual: ' + chalk.dim(error.actual));
-            }
+            console.log(
+              '  ' + chalk.yellow(error.path || '/') + ': ' + error.message + chalk.dim(` [${error.keyword}]`)
+            );
           }
           process.exit(1);
         }
