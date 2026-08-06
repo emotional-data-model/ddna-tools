@@ -8,7 +8,7 @@ CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts
 
 ## What This Repo Is
 
-- **Current version:** v0.4.1
+- **Current version:** v0.4.3
 - **EDM spec:** canonical, consumed as a dependency — currently 0.8.3 via `file:../edm-spec` (see Pending above). Full profile = **91 fields**. `narrative_archetype` = **12 canonical identity archetypes** (no `orphan`, no `mentor`) per ADR-0030.
 - **License:** MIT (open source)
 - **npm:** `ddna-tools`
