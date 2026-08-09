@@ -2,14 +2,14 @@
 
 CLI and library for extracting, sealing, verifying, and inspecting EDM artifacts as .ddna envelopes.
 
-**Last session:** 2026-07-22 — version-truth sweep: edm-spec dependency at `file:../edm-spec` (0.8.3), EDM version derived from the installed spec (`src/lib/edm-version.ts`), bundled schemas synced to 0.8.3; branch feat/version-truth-083
+**Last session:** 2026-07-22 — version-truth sweep: EDM version derived from the installed spec (`src/lib/edm-version.ts`), bundled schemas synced to 0.8.3; branch feat/version-truth-083. (Doc synced 2026-08-09 by the platform park session, H13.)
 
-**Pending:** flip the `edm-spec` dependency from `file:../edm-spec` back to a versioned npm range (`^0.8.3`) once the founder publishes edm-spec 0.8.3 to npm.
+**Pending:** (resolved) the `file:../edm-spec` → `^0.8.3` flip shipped in `f98ac77` (2026-07-22, registry copy verified, suite green); package.json carries `"edm-spec": "^0.8.3"`. v0.4.3 published to npm (registry-checked 2026-08-07 platform sweep, backlog S3). NOTE: this branch (`feat/version-truth-083`) is not merged to this repo's main — merge is a founder step (platform backlog H13 residue).
 
 ## What This Repo Is
 
 - **Current version:** v0.4.3
-- **EDM spec:** canonical, consumed as a dependency — currently 0.8.3 via `file:../edm-spec` (see Pending above). Full profile = **91 fields**. `narrative_archetype` = **12 canonical identity archetypes** (no `orphan`, no `mentor`) per ADR-0030.
+- **EDM spec:** canonical, consumed as a dependency — `edm-spec@^0.8.3` from the npm registry (flip f98ac77). Full profile = **91 fields**. `narrative_archetype` = **12 canonical identity archetypes** (no `orphan`, no `mentor`) per ADR-0030.
 - **License:** MIT (open source)
 - **npm:** `ddna-tools`
 - **Remote:** github.com/emotional-data-model/ddna-tools
